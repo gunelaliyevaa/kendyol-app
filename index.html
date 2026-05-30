@@ -1,16 +1,49 @@
 
-  <!DOCTYPE html>
-  <html lang="en">
-    <head>
-      <meta charset="UTF-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <title>Farm-to-City Marketplace App</title>
-      <style>html, body { height: 100%; margin: 0; } #root { height: 100%; }</style>
-    </head>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="apple-mobile-web-app-capable" content="true" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="KəndYol" />
+    <link rel="icon" type="image/png" href="/kendyol-logo.png" />
+    <link rel="apple-touch-icon" href="/kendyol-logo.png" />
+    <title>KəndYol - Farm-to-City Marketplace</title>
+    <style>
+      * {
+        -webkit-tap-highlight-color: transparent;
+      }
 
-    <body>
-      <div id="root"></div>
-      <script type="module" src="/src/main.tsx"></script>
-    </body>
-  </html>
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        overflow-x: hidden;
+      }
+
+      #root {
+        height: 100%;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+      }
+
+      @media (min-width: 1024px) {
+        #root > * {
+          max-width: 430px;
+          width: 430px;
+          height: 100vh;
+          box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
   
