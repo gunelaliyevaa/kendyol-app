@@ -62,7 +62,7 @@ export default function DriverPanel() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
-      <MobileHeader title={t('driver.title')} accentColor="blue" onProfileClick={() => setActiveTab("profile")} />
+      <MobileHeader title={t('customer.home.title')} titlePath="/" accentColor="blue" onProfileClick={() => setActiveTab("profile")} />
       <ProfileEditDialog open={editProfileOpen} onOpenChange={setEditProfileOpen} name="Elvin Məmmədov" phone="+994 70 987 65 43" accent="blue" />
 
       {/* Driver Dashboard Header */}

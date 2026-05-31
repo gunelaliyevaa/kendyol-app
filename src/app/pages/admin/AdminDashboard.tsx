@@ -109,7 +109,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
-      <MobileHeader title={t('admin.title')} showProfile={false} accentColor="blue" />
+      <MobileHeader title={t('customer.home.title')} titlePath="/" showProfile={false} accentColor="blue" />
 
       {/* Stats */}
       <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white px-6 py-7">

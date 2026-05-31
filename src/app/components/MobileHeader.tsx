@@ -11,6 +11,7 @@ interface MobileHeaderProps {
   onBackClick?: () => void;
   onProfileClick?: () => void;
   profilePath?: string;
+  titlePath?: string;
   showProfile?: boolean;
   accentColor?: "green" | "amber" | "blue";
 }
@@ -23,6 +24,7 @@ export function MobileHeader({
   onBackClick,
   onProfileClick,
   profilePath = "/customer/subscriptions?tab=profile",
+  titlePath,
   showProfile = true,
   accentColor = "green",
 }: MobileHeaderProps) {
@@ -67,14 +69,20 @@ export function MobileHeader({
             </button>
           )}
 
-          <h2
-            className="
-              font-bold text-lg text-[#0F471A]
-              truncate
-            "
-          >
-            {title}
-          </h2>
+          {titlePath ? (
+            <button
+              type="button"
+              onClick={() => navigate(titlePath)}
+              className="truncate rounded-lg font-bold text-lg text-[#0F471A] hover:text-green-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2"
+              aria-label={`${title}: rol seçiminə qayıt`}
+            >
+              {title}
+            </button>
+          ) : (
+            <h2 className="font-bold text-lg text-[#0F471A] truncate">
+              {title}
+            </h2>
+          )}
         </div>
 
         {/* RIGHT */}

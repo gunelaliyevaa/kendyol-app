@@ -68,7 +68,7 @@ export default function FarmerDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
-      <MobileHeader title={t('farmer.dashboard.title')} accentColor="amber" onProfileClick={() => navigate('/farmer/profile')} />
+      <MobileHeader title={t('customer.home.title')} titlePath="/" accentColor="amber" onProfileClick={() => navigate('/farmer/profile')} />
 
       {/* Next collection */}
       <div className="bg-gradient-to-br from-amber-600 to-orange-700 text-white px-6 py-7">

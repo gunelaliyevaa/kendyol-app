@@ -7,10 +7,10 @@ import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Switch } from "../../components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
-import { 
-  Leaf, 
-  Milk, 
-  Beef, 
+import {
+  Leaf,
+  Milk,
+  Beef,
   Box,
   Clock,
   Edit,
@@ -37,38 +37,41 @@ export default function Subscriptions() {
   const lang = language as Language;
   const cartCount = useCartCount();
   const [searchParams] = useSearchParams();
+
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "active");
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [cancelledSubId, setCancelledSubId] = useState<number | null>(null);
   const [cancelSuccess, setCancelSuccess] = useState(false);
   const [cancelledSubName, setCancelledSubName] = useState("");
+
   const vegetableItems = () => [
-    `${getProductName("tomato", lang)} (1 ${t('product.kg')})`,
-    `${getProductName("cucumber", lang)} (1 ${t('product.kg')})`,
+    `${getProductName("tomato", lang)} (1 ${t("product.kg")})`,
+    `${getProductName("cucumber", lang)} (1 ${t("product.kg")})`,
     `${getProductName("pepper", lang)} (500 q)`,
-    `${getProductName("spinach", lang)} (2 ${t('product.bunch')})`,
+    `${getProductName("spinach", lang)} (2 ${t("product.bunch")})`,
     `${getProductName("onion", lang)} (500 q)`,
-    `${getProductName("carrot", lang)} (1 ${t('product.kg')})`,
+    `${getProductName("carrot", lang)} (1 ${t("product.kg")})`
   ];
+
   const dairyItems = () => [
     `${getProductName("milk", lang)} (2L)`,
     `${getProductName("yogurt", lang)} (500q)`,
     `${getProductName("butter", lang)} (250q)`,
     `${getProductName("cheese", lang)} (300q)`,
-    `${getProductName("chicken_eggs", lang)} (6 ${t('product.piece')})`,
+    `${getProductName("chicken_eggs", lang)} (6 ${t("product.piece")})`
   ];
 
   const [activeSubscriptions, setActiveSubscriptions] = useState([
     {
       id: 1,
-      name: t('boxes.vegetable'),
+      name: t("boxes.vegetable"),
       icon: Leaf,
       color: "bg-green-500",
       borderColor: "border-l-4 border-l-green-500",
       headerBg: "bg-gradient-to-r from-green-50 to-emerald-50",
       price: 25,
-      frequency: t('sub.weekly'),
+      frequency: t("sub.weekly"),
       nextDelivery: "25 Mart 2026",
       endDate: "25 Aprel 2026",
       lastBilling: "₼25.00",
@@ -78,62 +81,36 @@ export default function Subscriptions() {
   ]);
 
   useEffect(() => {
-    setActiveSubscriptions(prev => prev.map(subscription => {
-      if (subscription.id === 1 || subscription.id === 101) {
-        return { ...subscription, name: t('boxes.vegetable'), frequency: t('sub.weekly'), items: vegetableItems() };
-      }
-      if (subscription.id === 2) {
-        return { ...subscription, name: t('boxes.dairy'), frequency: t('sub.weekly'), items: dairyItems() };
-      }
-      return subscription;
-    }));
+    setActiveSubscriptions(prev =>
+      prev.map(subscription => {
+        if (subscription.id === 1 || subscription.id === 101) {
+          return {
+            ...subscription,
+            name: t("boxes.vegetable"),
+            frequency: t("sub.weekly"),
+            items: vegetableItems()
+          };
+        }
+
+        if (subscription.id === 2 || subscription.id === 102) {
+          return {
+            ...subscription,
+            name: t("boxes.dairy"),
+            frequency: t("sub.weekly"),
+            items: dairyItems()
+          };
+        }
+
+        return subscription;
+      })
+    );
   }, [language]);
 
-  const availableBoxes = [
-    {
-      id: 3,
-      name: t('boxes.meat'),
-      icon: Beef,
-      color: "bg-red-500",
-      borderColor: "border-l-4 border-l-red-500",
-      price: 45,
-      individualPrice: 62.50,
-      frequency: t('sub.weekly'),
-      dealBadge: t('sub.goodDeal'),
-      dealBadgeColor: "bg-amber-100 text-amber-800 border-amber-300",
-      items: [
-        "Toyuq əti (1.5kq)",
-        "Mal əti (1kq)",
-        "Quzu əti (500q)",
-        "Mövsümi seçim"
-      ],
-      savings: "Ayrı alışa nisbətən ₼15 qənaət"
-    },
-    {
-      id: 4,
-      name: t('boxes.custom'),
-      icon: Box,
-      color: "bg-purple-500",
-      borderColor: "border-l-4 border-l-purple-500",
-      price: "—",
-      individualPrice: null,
-      frequency: t('sub.weekly'),
-      dealBadge: t('sub.flexible'),
-      dealBadgeColor: "bg-purple-100 text-purple-800 border-purple-300",
-      items: [
-        "Öz məhsullarınızı seçin",
-        "Minimum 5 məhsul",
-        "İstənilən kateqoriyanı qarışdırın"
-      ],
-      savings: t('sub.flexible')
-    }
-  ];
-
   const toggleSubscription = (id: number) => {
-    setActiveSubscriptions(prev => 
-      prev.map(sub => 
-        sub.id === id 
-          ? { ...sub, status: sub.status === 'active' ? 'paused' : 'active' }
+    setActiveSubscriptions(prev =>
+      prev.map(sub =>
+        sub.id === id
+          ? { ...sub, status: sub.status === "active" ? "paused" : "active" }
           : sub
       )
     );
@@ -170,24 +147,31 @@ export default function Subscriptions() {
   }) => {
     if (box.comingSoon || box.price === null) return;
 
-    setActiveSubscriptions(prev => prev.some(subscription => subscription.name === box.name)
-      ? prev
-      : [...prev, {
-        id: box.id,
-        name: box.name,
-        icon: box.icon,
-        color: box.color,
-        borderColor: box.borderColor,
-        headerBg: "bg-gradient-to-r from-green-50 to-emerald-50",
-        price: box.price,
-        frequency: box.frequency,
-        nextDelivery: "25 Mart 2026",
-        endDate: "25 Aprel 2026",
-        lastBilling: `₼${box.price.toFixed(2)}`,
-        items: box.items,
-        status: "active",
-      }]
+    const price = box.price;
+
+    setActiveSubscriptions(prev =>
+      prev.some(subscription => subscription.id === box.id)
+        ? prev
+        : [
+          ...prev,
+          {
+            id: box.id,
+            name: box.name,
+            icon: box.icon,
+            color: box.color,
+            borderColor: box.borderColor,
+            headerBg: "bg-gradient-to-r from-green-50 to-emerald-50",
+            price,
+            frequency: box.frequency,
+            nextDelivery: "25 Mart 2026",
+            endDate: "25 Aprel 2026",
+            lastBilling: `₼${price.toFixed(2)}`,
+            items: box.items,
+            status: "active"
+          }
+        ]
     );
+
     toast.success(t("common.saved"));
     setActiveTab("active");
   };
@@ -195,123 +179,154 @@ export default function Subscriptions() {
   const cancelSubInfo = activeSubscriptions.find(s => s.id === cancelledSubId);
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
-      <MobileHeader title={t('sub.title')} showBack showCart cartCount={cartCount} accentColor="green" />
+    <div className="min-h-screen bg-gray-50 pb-32">
+      <MobileHeader
+        title={t("sub.title")}
+        showBack
+        showCart
+        cartCount={cartCount}
+        accentColor="green"
+      />
+
 
       {/* Cancel Confirmation Dialog */}
       {cancelDialogOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={closeCancelDialog} />
-          <div className="relative bg-white rounded-t-3xl w-full max-w-md p-6 pb-8">
-            {/* Handle */}
-            <div className="flex justify-center mb-4">
-              <div className="w-10 h-1 bg-gray-200 rounded-full" />
-            </div>
+        <div className="fixed inset-0 z-[1000]">
+          {/* Overlay */}
+          <div
+            className="absolute inset-0 bg-black/45"
+            onClick={closeCancelDialog}
+          />
 
-            {!cancelSuccess ? (
-              <>
-                <div className="flex items-center justify-between mb-5">
-                  <h3 className="text-lg font-semibold text-gray-900">{t('sub.cancelTitle')}</h3>
-                  <button
-                    onClick={closeCancelDialog}
-                    className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-all"
-                  >
-                    <X className="w-4 h-4 text-gray-500" />
-                  </button>
-                </div>
+          {/* Safe display area: below header/tabs and above bottom nav */}
+          <div className="absolute left-0 right-0 top-[112px] bottom-[calc(5.5rem+env(safe-area-inset-bottom))] flex items-center justify-center px-4">
+            <div className="relative w-full max-w-[360px] rounded-2xl bg-white shadow-2xl border border-gray-100 overflow-hidden max-h-full overflow-y-auto">
+              {!cancelSuccess ? (
+                <>
+                  {/* Header */}
+                  <div className="px-4 pt-4 pb-3 border-b border-gray-100">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                          <AlertTriangle className="w-5 h-5 text-red-500" />
+                        </div>
 
-                {/* Warning Icon */}
-                <div className="flex justify-center mb-5">
-                  <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
-                    <AlertTriangle className="w-8 h-8 text-red-500" />
+                        <div className="min-w-0">
+                          <h3 className="text-base font-semibold text-gray-900 leading-tight">
+                            {t("sub.cancelTitle")}
+                          </h3>
+                          <p className="text-xs text-gray-500 mt-0.5 leading-snug truncate">
+                            {cancelledSubName}
+                          </p>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={closeCancelDialog}
+                        className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-all shrink-0"
+                      >
+                        <X className="w-4 h-4 text-gray-500" />
+                      </button>
+                    </div>
                   </div>
-                </div>
 
-                <p className="text-center text-base font-semibold text-gray-900 mb-2">{t('sub.cancelConfirm')}</p>
-                <p className="text-center text-sm text-gray-500 mb-5 leading-relaxed">{t('sub.cancelDesc')}</p>
+                  {/* Body */}
+                  <div className="px-4 py-4">
+                    <p className="text-center text-sm font-semibold text-gray-900 mb-1.5">
+                      {t("sub.cancelConfirm")}
+                    </p>
 
-                {/* Info Cards */}
-                {cancelSubInfo && (
-                  <div className="space-y-3 mb-6">
-                    <div className="bg-red-50 rounded-xl p-4 border border-red-200">
-                      <div className="flex items-start gap-3">
-                        <TrendingDown className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                        <div>
-                          <div className="text-sm font-semibold text-red-900 mb-1">{cancelledSubName}</div>
-                          <div className="text-xs text-red-700">{t('sub.cancelDesc')}</div>
+                    <p className="text-center text-xs text-gray-500 mb-4 leading-relaxed">
+                      {t("sub.cancelDesc")}
+                    </p>
+
+                    {cancelSubInfo && (
+                      <div className="rounded-xl bg-gray-50 border border-gray-200 p-3 mb-4 space-y-2">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Calendar className="w-4 h-4 text-gray-500 shrink-0" />
+                            <span className="text-xs text-gray-600 truncate">
+                              {t("sub.cancelEndDate")}
+                            </span>
+                          </div>
+
+                          <span className="text-xs font-semibold text-gray-900 text-right shrink-0">
+                            {translateDemoText(cancelSubInfo.endDate, lang)}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Clock className="w-4 h-4 text-gray-500 shrink-0" />
+                            <span className="text-xs text-gray-600 truncate">
+                              {t("sub.cancelLastBilling")}
+                            </span>
+                          </div>
+
+                          <span className="text-xs font-semibold text-gray-900 text-right shrink-0">
+                            {cancelSubInfo.lastBilling}
+                          </span>
                         </div>
                       </div>
-                    </div>
+                    )}
 
-                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4 text-gray-500" />
-                            <span className="text-sm text-gray-600">{t('sub.cancelEndDate')}</span>
-                          </div>
-                          <span className="text-sm font-semibold text-gray-900">{translateDemoText(cancelSubInfo.endDate, lang)}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Clock className="w-4 h-4 text-gray-500" />
-                            <span className="text-sm text-gray-600">{t('sub.cancelLastBilling')}</span>
-                          </div>
-                          <span className="text-sm font-semibold text-gray-900">{cancelSubInfo.lastBilling}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="bg-blue-50 rounded-xl p-3 border border-blue-200">
-                      <p className="text-xs text-blue-700 text-center leading-relaxed">
-                        {t('sub.cancelledEndInfo')}
+                    <div className="rounded-xl bg-blue-50 border border-blue-100 px-3 py-2 mb-4">
+                      <p className="text-[11px] text-blue-700 text-center leading-relaxed">
+                        {t("sub.cancelledEndInfo")}
                       </p>
                     </div>
-                  </div>
-                )}
 
-                <div className="flex gap-3">
-                  <Button
-                    variant="outline"
-                    className="flex-1 border-2 border-gray-200 text-gray-700 hover:bg-gray-50 font-semibold rounded-xl h-12"
-                    onClick={closeCancelDialog}
-                  >
-                    {t('sub.cancelNo')}
-                  </Button>
-                  <Button
-                    className="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl h-12 shadow-md"
-                    onClick={confirmCancel}
-                  >
-                    {t('sub.cancelYes')}
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <>
-                {/* Success State */}
-                <div className="text-center py-4">
-                  <div className="flex justify-center mb-4">
-                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                      <CheckCircle2 className="w-8 h-8 text-green-600" />
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button
+                        variant="outline"
+                        className="h-10 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50 font-semibold text-sm"
+                        onClick={closeCancelDialog}
+                      >
+                        {t("sub.cancelNo")}
+                      </Button>
+
+                      <Button
+                        className="h-10 rounded-xl bg-red-500 hover:bg-red-600 text-white font-semibold text-sm shadow-sm"
+                        onClick={confirmCancel}
+                      >
+                        {t("sub.cancelYes")}
+                      </Button>
                     </div>
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('sub.cancelledMsg')}</h3>
-                  <p className="text-sm text-gray-500 mb-2 leading-relaxed">{cancelledSubName}</p>
-                  <p className="text-xs text-blue-600 bg-blue-50 rounded-xl px-4 py-2 border border-blue-100 inline-block mb-6">
-                    {t('sub.cancelledEndInfo')}
+                </>
+              ) : (
+                <div className="px-4 py-5 text-center">
+                  <div className="flex justify-center mb-3">
+                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                      <CheckCircle2 className="w-6 h-6 text-green-600" />
+                    </div>
+                  </div>
+
+                  <h3 className="text-base font-semibold text-gray-900 mb-1">
+                    {t("sub.cancelledMsg")}
+                  </h3>
+
+                  <p className="text-xs text-gray-500 mb-3 leading-relaxed">
+                    {cancelledSubName}
                   </p>
+
+                  <p className="text-[11px] text-blue-600 bg-blue-50 rounded-xl px-3 py-2 border border-blue-100 inline-block mb-4">
+                    {t("sub.cancelledEndInfo")}
+                  </p>
+
                   <Button
-                    className="w-full bg-green-600 hover:bg-green-700 font-semibold rounded-xl h-12"
+                    className="w-full bg-green-600 hover:bg-green-700 font-semibold rounded-xl h-10"
                     onClick={closeCancelDialog}
                   >
-                    {t('common.close')}
+                    {t("common.close")}
                   </Button>
                 </div>
-              </>
-            )}
+              )}
+            </div>
           </div>
         </div>
       )}
+
 
       <ProfileEditDialog
         open={editProfileOpen}
@@ -323,71 +338,120 @@ export default function Subscriptions() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="bg-white border-b-4 border-green-100 sticky top-[57px] z-40 shadow-sm px-4 pt-3 pb-0">
           <TabsList className="w-full bg-green-50 p-1 rounded-xl border-2 border-green-100">
-            <TabsTrigger value="active" className="flex-1 rounded-lg data-[state=active]:bg-green-600 data-[state=active]:text-white font-medium">
-              {t('sub.active')}
+            <TabsTrigger
+              value="active"
+              className="flex-1 rounded-lg data-[state=active]:bg-green-600 data-[state=active]:text-white font-medium"
+            >
+              {t("sub.active")}
             </TabsTrigger>
-            <TabsTrigger value="available" className="flex-1 rounded-lg data-[state=active]:bg-green-600 data-[state=active]:text-white font-medium">
-              {t('sub.available')}
+
+            <TabsTrigger
+              value="available"
+              className="flex-1 rounded-lg data-[state=active]:bg-green-600 data-[state=active]:text-white font-medium"
+            >
+              {t("sub.available")}
             </TabsTrigger>
-            <TabsTrigger value="profile" className="flex-1 rounded-lg data-[state=active]:bg-green-600 data-[state=active]:text-white font-medium">
-              {t('customer.profile.title')}
+
+            <TabsTrigger
+              value="profile"
+              className="flex-1 rounded-lg data-[state=active]:bg-green-600 data-[state=active]:text-white font-medium"
+            >
+              {t("customer.profile.title")}
             </TabsTrigger>
           </TabsList>
         </div>
 
         {/* Active Subscriptions */}
-        <TabsContent value="active" className="p-4 space-y-4 mt-0">
+        <TabsContent value="active" className="px-4 pt-4 pb-36 space-y-4 mt-0">
           {activeSubscriptions.length === 0 ? (
             <Card className="p-8 text-center border-2 border-dashed border-green-200">
               <Box className="w-14 h-14 mx-auto mb-4 text-green-300" />
-              <h3 className="text-lg font-semibold mb-2 text-gray-900">{t('sub.noActive')}</h3>
-              <p className="text-gray-600 mb-4 text-sm">{t('sub.noActiveDesc')}</p>
-              <Button className="bg-green-600 hover:bg-green-700" onClick={() => setActiveTab("available")}>{t('sub.browseBoxes')}</Button>
+              <h3 className="text-lg font-semibold mb-2 text-gray-900">
+                {t("sub.noActive")}
+              </h3>
+              <p className="text-gray-600 mb-4 text-sm">
+                {t("sub.noActiveDesc")}
+              </p>
+              <Button
+                className="bg-green-600 hover:bg-green-700"
+                onClick={() => setActiveTab("available")}
+              >
+                {t("sub.browseBoxes")}
+              </Button>
             </Card>
           ) : (
-            activeSubscriptions.map((subscription) => {
+            activeSubscriptions.map(subscription => {
               const Icon = subscription.icon;
-              const isActive = subscription.status === 'active';
+              const isActive = subscription.status === "active";
+
               return (
-                <Card key={subscription.id} className={`overflow-hidden border-2 ${isActive ? 'border-green-300' : 'border-gray-200'} ${subscription.borderColor} transition-all duration-200 hover:shadow-lg`}>
-                  {/* Header */}
-                  <div className={`p-4 ${subscription.headerBg} border-b-2 ${isActive ? 'border-green-200' : 'border-gray-200'}`}>
+                <Card
+                  key={subscription.id}
+                  className={`overflow-hidden border-2 ${isActive ? "border-green-300" : "border-gray-200"
+                    } ${subscription.borderColor} transition-all duration-200 hover:shadow-lg`}
+                >
+                  <div
+                    className={`p-4 ${subscription.headerBg} border-b-2 ${isActive ? "border-green-200" : "border-gray-200"
+                      }`}
+                  >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
                         <div className={`${subscription.color} rounded-2xl p-3 shadow-md`}>
                           <Icon className="w-6 h-6 text-white" />
                         </div>
+
                         <div>
-                          <h3 className="text-base font-semibold text-gray-900">{subscription.name}</h3>
-                          <p className="text-xs text-gray-600">{subscription.frequency} {t('sub.delivery')}</p>
+                          <h3 className="text-base font-semibold text-gray-900">
+                            {subscription.name}
+                          </h3>
+                          <p className="text-xs text-gray-600">
+                            {subscription.frequency} {t("sub.delivery")}
+                          </p>
                         </div>
                       </div>
-                      <Badge className={`font-semibold text-xs ${isActive ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700'}`}>
-                        {isActive ? t('sub.status.active') : t('sub.status.paused')}
+
+                      <Badge
+                        className={`font-semibold text-xs ${isActive
+                          ? "bg-green-600 text-white"
+                          : "bg-gray-200 text-gray-700"
+                          }`}
+                      >
+                        {isActive ? t("sub.status.active") : t("sub.status.paused")}
                       </Badge>
                     </div>
 
                     <div className="flex items-center gap-2 text-xs text-gray-700 bg-white/70 rounded-lg px-3 py-2">
                       <Calendar className="w-3.5 h-3.5 text-green-600" />
-                          <span className="font-medium">{t('sub.nextDelivery')}: {translateDemoText(subscription.nextDelivery, lang)}</span>
+                      <span className="font-medium">
+                        {t("sub.nextDelivery")}:{" "}
+                        {translateDemoText(subscription.nextDelivery, lang)}
+                      </span>
                     </div>
                   </div>
 
-                  {/* Content */}
                   <div className="p-4 bg-white">
                     <div className="flex items-center justify-between mb-4">
-                      <div className="text-2xl font-bold text-gray-900">₼{subscription.price}/{t('sub.week')}</div>
-                      <Button variant="outline" size="sm" className="border-2 border-green-200 text-green-700 hover:bg-green-50 hover:border-green-400 transition-all text-xs h-8" onClick={() => toast.info(t("common.detailsOpened"))}>
+                      <div className="text-2xl font-bold text-gray-900">
+                        ₼{subscription.price}/{t("sub.week")}
+                      </div>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-2 border-green-200 text-green-700 hover:bg-green-50 hover:border-green-400 transition-all text-xs h-8"
+                        onClick={() => toast.info(t("common.detailsOpened"))}
+                      >
                         <Edit className="w-3.5 h-3.5 mr-1.5" />
-                        {t('cart.customize')}
+                        {t("cart.customize")}
                       </Button>
                     </div>
 
                     <div className="mb-4">
                       <h4 className="text-xs font-semibold mb-3 text-gray-700 flex items-center gap-2">
                         <div className="w-1 h-4 bg-green-500 rounded-full" />
-                        {t('sub.included')}
+                        {t("sub.included")}
                       </h4>
+
                       <div className="space-y-1.5 bg-gray-50 rounded-xl p-3 border border-gray-200">
                         {subscription.items.map((item, idx) => (
                           <div key={idx} className="flex items-start gap-2 text-xs">
@@ -400,40 +464,46 @@ export default function Subscriptions() {
 
                     <div className="flex items-center justify-between pt-3 border-t-2 border-gray-100 mb-3">
                       <span className="text-sm font-medium text-gray-700">
-                        {isActive ? t('sub.activeStatus') : t('sub.paused')}
+                        {isActive ? t("sub.activeStatus") : t("sub.paused")}
                       </span>
-                      <Switch 
+
+                      <Switch
                         checked={isActive}
                         onCheckedChange={() => toggleSubscription(subscription.id)}
                         className="data-[state=checked]:bg-green-600"
                       />
                     </div>
 
-                    {/* Cancel Button */}
-                    <Button
-                      variant="outline"
-                      className="w-full border-2 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 font-semibold rounded-xl h-10 transition-all text-sm"
-                      onClick={() => openCancelDialog(subscription)}
-                    >
-                      {t('sub.cancel')}
-                    </Button>
+                    <div className="flex justify-center pt-1">
+                      <Button
+                        variant="outline"
+                        className="w-fit min-w-[180px] px-5 border border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 font-semibold rounded-full h-9 transition-all text-sm"
+                        onClick={() => openCancelDialog(subscription)}
+                      >
+                        {t("sub.cancel")}
+                      </Button>
+                    </div>
                   </div>
                 </Card>
               );
             })
           )}
 
-          {/* Next Delivery Info */}
           <Card className="p-4 bg-blue-50 border-2 border-blue-300 border-l-4 border-l-blue-500">
             <div className="flex items-start gap-3">
               <div className="bg-blue-100 rounded-xl p-2">
                 <Clock className="w-5 h-5 text-blue-600" />
               </div>
+
               <div className="flex-1">
-                <h4 className="text-blue-900 font-semibold mb-1 text-sm">{t('sub.nextBatch')}</h4>
-                <p className="text-xs text-blue-700 mb-2 leading-relaxed">{t('sub.nextBatchDesc')}</p>
+                <h4 className="text-blue-900 font-semibold mb-1 text-sm">
+                  {t("sub.nextBatch")}
+                </h4>
+                <p className="text-xs text-blue-700 mb-2 leading-relaxed">
+                  {t("sub.nextBatchDesc")}
+                </p>
                 <div className="text-xs text-blue-600 font-medium bg-blue-100 rounded-lg px-2 py-1 inline-block">
-                  {t('sub.cutoff')}
+                  {t("sub.cutoff")}
                 </div>
               </div>
             </div>
@@ -445,14 +515,17 @@ export default function Subscriptions() {
           <Card className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-300 border-l-4 border-l-green-500">
             <div className="flex items-center gap-2 mb-3">
               <Sparkles className="w-5 h-5 text-green-600" />
-              <h3 className="font-semibold text-green-900 text-sm">{t('sub.whySubscribe')}</h3>
+              <h3 className="font-semibold text-green-900 text-sm">
+                {t("sub.whySubscribe")}
+              </h3>
             </div>
+
             <ul className="space-y-2">
               {[
-                t('sub.benefit1'),
-                t('sub.benefit2'),
-                t('sub.benefit3'),
-                t('sub.benefit4')
+                t("sub.benefit1"),
+                t("sub.benefit2"),
+                t("sub.benefit3"),
+                t("sub.benefit4")
               ].map((benefit, idx) => (
                 <li key={idx} className="flex items-start gap-2 text-xs text-gray-700">
                   <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
@@ -462,121 +535,189 @@ export default function Subscriptions() {
             </ul>
           </Card>
 
-          {/* Available boxes with price comparison */}
           {[
             {
               id: 101,
-              name: t('boxes.vegetable'),
+              name: t("boxes.vegetable"),
               icon: Leaf,
               color: "bg-green-500",
               borderColor: "border-l-4 border-l-green-500",
               price: 25,
-              individualPrice: 32.50,
-              frequency: t('sub.weekly'),
-              dealBadge: t('sub.bestValue'),
+              individualPrice: 32.5,
+              frequency: t("sub.weekly"),
+              dealBadge: t("sub.bestValue"),
               dealBadgeColor: "bg-green-100 text-green-800 border-green-300",
               highlightColor: "from-green-50 to-emerald-50",
-              items: vegetableItems(),
+              items: vegetableItems()
             },
             {
               id: 102,
-              name: t('boxes.dairy'),
+              name: t("boxes.dairy"),
               icon: Milk,
               color: "bg-blue-500",
               borderColor: "border-l-4 border-l-blue-500",
               price: 18,
-              individualPrice: 30.00,
-              frequency: t('sub.weekly'),
-              dealBadge: t('sub.hotOffer'),
+              individualPrice: 30.0,
+              frequency: t("sub.weekly"),
+              dealBadge: t("sub.hotOffer"),
               dealBadgeColor: "bg-red-100 text-red-800 border-red-300",
               highlightColor: "from-blue-50 to-sky-50",
               items: dairyItems(),
-              comingSoon: true,
+              comingSoon: true
             },
             {
               id: 103,
-              name: t('boxes.meat'),
+              name: t("boxes.meat"),
               icon: Beef,
               color: "bg-red-500",
               borderColor: "border-l-4 border-l-red-500",
               price: 45,
-              individualPrice: 62.50,
-              frequency: t('sub.weekly'),
-              dealBadge: t('sub.goodDeal'),
+              individualPrice: 62.5,
+              frequency: t("sub.weekly"),
+              dealBadge: t("sub.goodDeal"),
               dealBadgeColor: "bg-amber-100 text-amber-800 border-amber-300",
               highlightColor: "from-red-50 to-rose-50",
-              items: [`${getProductName("chicken", lang)} (1.5 ${t('product.kg')})`, `${getProductName("beef", lang)} (1 ${t('product.kg')})`, `${getProductName("lamb", lang)} (500 q)`, localize({ az: "Mövsümi seçim", en: "Seasonal selection", ru: "Сезонный выбор" }, lang)],
-              comingSoon: true,
+              items: [
+                `${getProductName("chicken", lang)} (1.5 ${t("product.kg")})`,
+                `${getProductName("beef", lang)} (1 ${t("product.kg")})`,
+                `${getProductName("lamb", lang)} (500 q)`,
+                localize(
+                  {
+                    az: "Mövsümi seçim",
+                    en: "Seasonal selection",
+                    ru: "Сезонный выбор"
+                  },
+                  lang
+                )
+              ],
+              comingSoon: true
             },
             {
               id: 104,
-              name: t('boxes.custom'),
+              name: t("boxes.custom"),
               icon: Box,
               color: "bg-purple-500",
               borderColor: "border-l-4 border-l-purple-500",
               price: null,
               individualPrice: null,
-              frequency: t('sub.weekly'),
-              dealBadge: t('sub.flexible'),
+              frequency: t("sub.weekly"),
+              dealBadge: t("sub.flexible"),
               dealBadgeColor: "bg-purple-100 text-purple-800 border-purple-300",
               highlightColor: "from-purple-50 to-violet-50",
               items: [
-                localize({ az: "Öz məhsullarınızı seçin", en: "Choose your products", ru: "Выберите свои продукты" }, lang),
-                localize({ az: "Minimum 5 məhsul", en: "Minimum 5 products", ru: "Минимум 5 продуктов" }, lang),
-                localize({ az: "İstənilən kateqoriyanı qarışdırın", en: "Mix any category", ru: "Смешивайте любые категории" }, lang),
+                localize(
+                  {
+                    az: "Öz məhsullarınızı seçin",
+                    en: "Choose your products",
+                    ru: "Выберите свои продукты"
+                  },
+                  lang
+                ),
+                localize(
+                  {
+                    az: "Minimum 5 məhsul",
+                    en: "Minimum 5 products",
+                    ru: "Минимум 5 продуктов"
+                  },
+                  lang
+                ),
+                localize(
+                  {
+                    az: "İstənilən kateqoriyanı qarışdırın",
+                    en: "Mix any category",
+                    ru: "Смешивайте любые категории"
+                  },
+                  lang
+                )
               ],
-              comingSoon: true,
+              comingSoon: true
             }
-          ].map((box) => {
+          ].map(box => {
             const Icon = box.icon;
-            const saveAmount = box.price && box.individualPrice ? (box.individualPrice - box.price).toFixed(2) : null;
-            const savePercent = box.price && box.individualPrice ? Math.round(((box.individualPrice - box.price) / box.individualPrice) * 100) : null;
+            const saveAmount =
+              box.price && box.individualPrice
+                ? (box.individualPrice - box.price).toFixed(2)
+                : null;
+            const savePercent =
+              box.price && box.individualPrice
+                ? Math.round(((box.individualPrice - box.price) / box.individualPrice) * 100)
+                : null;
+
             return (
-              <Card key={box.id} className={`overflow-hidden border-2 border-gray-200 ${box.borderColor} transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5 cursor-pointer`}>
-                {/* Box header */}
+              <Card
+                key={box.id}
+                className={`overflow-hidden border-2 border-gray-200 ${box.borderColor} transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5 cursor-pointer`}
+              >
                 <div className={`bg-gradient-to-r ${box.highlightColor} p-4 border-b border-gray-100`}>
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <div className={`${box.color} rounded-2xl p-3 shadow-md`}>
                         <Icon className="w-6 h-6 text-white" />
                       </div>
+
                       <div>
-                        <h3 className="text-base font-semibold text-gray-900">{box.name}</h3>
-                        <p className="text-xs text-gray-500">{box.frequency} {t('sub.delivery')}</p>
+                        <h3 className="text-base font-semibold text-gray-900">
+                          {box.name}
+                        </h3>
+                        <p className="text-xs text-gray-500">
+                          {box.frequency} {t("sub.delivery")}
+                        </p>
                       </div>
                     </div>
+
                     <span className={`text-xs font-bold px-2 py-1 rounded-full border ${box.dealBadgeColor}`}>
-                      {box.comingSoon ? t('common.comingSoon') : box.dealBadge}
+                      {box.comingSoon ? t("common.comingSoon") : box.dealBadge}
                     </span>
                   </div>
 
-                  {/* Price comparison block */}
                   {box.price && box.individualPrice && saveAmount && savePercent ? (
                     <div className="bg-white rounded-xl p-3 border border-gray-200 shadow-sm">
-                      <div className="text-xs text-gray-500 font-medium mb-2 text-center">{t('sub.comparisonTitle')}</div>
+                      <div className="text-xs text-gray-500 font-medium mb-2 text-center">
+                        {t("sub.comparisonTitle")}
+                      </div>
+
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex-1 text-center">
-                          <div className="text-xs text-gray-400 font-medium mb-0.5">{t('sub.individualPrice')}</div>
-                          <div className="text-base font-bold text-gray-400 line-through">₼{box.individualPrice.toFixed(2)}</div>
+                          <div className="text-xs text-gray-400 font-medium mb-0.5">
+                            {t("sub.individualPrice")}
+                          </div>
+                          <div className="text-base font-bold text-gray-400 line-through">
+                            ₼{box.individualPrice.toFixed(2)}
+                          </div>
                         </div>
+
                         <div className="px-2 text-gray-300 font-bold">→</div>
+
                         <div className="flex-1 text-center">
-                          <div className="text-xs text-green-600 font-medium mb-0.5">{t('sub.bundlePrice')}</div>
-                          <div className="text-2xl font-bold text-green-700">₼{box.price}</div>
+                          <div className="text-xs text-green-600 font-medium mb-0.5">
+                            {t("sub.bundlePrice")}
+                          </div>
+                          <div className="text-2xl font-bold text-green-700">
+                            ₼{box.price}
+                          </div>
                         </div>
                       </div>
+
                       <div className="flex items-center justify-center gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-1.5">
                         <TrendingDown className="w-3.5 h-3.5 text-green-600" />
                         <span className="text-sm font-bold text-green-700">
-                          {t('sub.youSave')} ₼{saveAmount} ({savePercent}% {t('sub.savePercent')})
+                          {t("sub.youSave")} ₼{saveAmount} ({savePercent}%{" "}
+                          {t("sub.savePercent")})
                         </span>
                       </div>
-                      <p className="text-xs text-gray-400 text-center mt-1.5">{t('sub.vsIndividual')}</p>
+
+                      <p className="text-xs text-gray-400 text-center mt-1.5">
+                        {t("sub.vsIndividual")}
+                      </p>
                     </div>
                   ) : (
                     <div className="bg-white rounded-xl p-3 border border-gray-200 text-center">
-                      <div className="text-2xl font-bold text-gray-900 mb-0.5">{t('sub.flexible')}</div>
-                      <p className="text-xs text-gray-500">{t('sub.vsIndividual')}</p>
+                      <div className="text-2xl font-bold text-gray-900 mb-0.5">
+                        {t("sub.flexible")}
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        {t("sub.vsIndividual")}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -591,8 +732,17 @@ export default function Subscriptions() {
                     ))}
                   </div>
 
-                  <Button disabled={box.comingSoon} onClick={() => subscribeToBox(box)} className={`w-full h-11 text-sm font-semibold rounded-xl shadow-md hover:shadow-lg transition-all hover:scale-[1.01] ${box.color.replace('bg-', 'bg-').replace('-500', '-600')} hover:opacity-90 text-white disabled:opacity-60 disabled:cursor-not-allowed`}>
-                    {box.comingSoon ? t('common.comingSoon') : `${t('sub.subscribeNow')} ${box.price ? `- ₼${box.price}/${t('sub.week')}` : ''}`}
+                  <Button
+                    disabled={box.comingSoon}
+                    onClick={() => subscribeToBox(box)}
+                    className={`w-full h-11 text-sm font-semibold rounded-xl shadow-md hover:shadow-lg transition-all hover:scale-[1.01] ${box.color
+                      .replace("bg-", "bg-")
+                      .replace("-500", "-600")} hover:opacity-90 text-white disabled:opacity-60 disabled:cursor-not-allowed`}
+                  >
+                    {box.comingSoon
+                      ? t("common.comingSoon")
+                      : `${t("sub.subscribeNow")} ${box.price ? `- ₼${box.price}/${t("sub.week")}` : ""
+                      }`}
                   </Button>
                 </div>
               </Card>
@@ -602,100 +752,144 @@ export default function Subscriptions() {
 
         {/* Customer Profile */}
         <TabsContent value="profile" className="p-4 space-y-4 mt-0">
-          {/* Profile Header */}
           <Card className="overflow-hidden border-2 border-green-200">
             <div className="bg-gradient-to-br from-green-600 to-emerald-700 p-5">
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 bg-white/30 rounded-2xl flex items-center justify-center border-2 border-white/40 shadow-lg">
                   <User className="w-8 h-8 text-white" />
                 </div>
+
                 <div>
-                  <h2 className="text-lg font-semibold text-white mb-0.5">Nigar Əliyeva</h2>
-                  <p className="text-green-100 text-sm">{t('customer.profile.memberSince')}: 2023</p>
+                  <h2 className="text-lg font-semibold text-white mb-0.5">
+                    Nigar Əliyeva
+                  </h2>
+                  <p className="text-green-100 text-sm">
+                    {t("customer.profile.memberSince")}: 2023
+                  </p>
                   <Badge className="bg-white/20 text-white border-white/30 border text-xs mt-1">
-                    {t('customer.profile.premiumMember')}
+                    {t("customer.profile.premiumMember")}
                   </Badge>
                 </div>
               </div>
             </div>
+
             <div className="p-4 bg-white">
               <div className="grid grid-cols-3 gap-3">
                 <div className="text-center bg-green-50 rounded-xl p-3 border border-green-200">
                   <div className="text-xl font-bold text-green-700">24</div>
-                  <div className="text-xs text-gray-500 font-medium">{t('customer.profile.totalOrders')}</div>
+                  <div className="text-xs text-gray-500 font-medium">
+                    {t("customer.profile.totalOrders")}
+                  </div>
                 </div>
+
                 <div className="text-center bg-amber-50 rounded-xl p-3 border border-amber-200">
                   <div className="text-xl font-bold text-amber-700">₼186</div>
-                  <div className="text-xs text-gray-500 font-medium">{t('customer.profile.totalSavings')}</div>
+                  <div className="text-xs text-gray-500 font-medium">
+                    {t("customer.profile.totalSavings")}
+                  </div>
                 </div>
+
                 <div className="text-center bg-blue-50 rounded-xl p-3 border border-blue-200">
-                  <div className="text-xl font-bold text-blue-700">{activeSubscriptions.length}</div>
-                  <div className="text-xs text-gray-500 font-medium">{t('customer.profile.activeSubscriptions')}</div>
+                  <div className="text-xl font-bold text-blue-700">
+                    {activeSubscriptions.length}
+                  </div>
+                  <div className="text-xs text-gray-500 font-medium">
+                    {t("customer.profile.activeSubscriptions")}
+                  </div>
                 </div>
               </div>
             </div>
-            <p className="px-4 pb-4 text-xs text-gray-600 bg-white">{t('customer.profile.premiumDesc')}</p>
+
+            <p className="px-4 pb-4 text-xs text-gray-600 bg-white">
+              {t("customer.profile.premiumDesc")}
+            </p>
           </Card>
 
-          {/* Personal Details */}
           <Card className="p-5 border-2 border-gray-200">
             <h3 className="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
               <div className="w-1 h-4 bg-green-500 rounded-full" />
-              {t('customer.profile.personalDetails')}
+              {t("customer.profile.personalDetails")}
             </h3>
+
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-gray-50 rounded-xl p-3 border border-gray-200">
-                  <div className="text-xs text-gray-500 font-medium mb-1">{t('customer.profile.name')}</div>
+                  <div className="text-xs text-gray-500 font-medium mb-1">
+                    {t("customer.profile.name")}
+                  </div>
                   <div className="font-semibold text-gray-900">Nigar</div>
                 </div>
+
                 <div className="bg-gray-50 rounded-xl p-3 border border-gray-200">
-                  <div className="text-xs text-gray-500 font-medium mb-1">{t('customer.profile.surname')}</div>
+                  <div className="text-xs text-gray-500 font-medium mb-1">
+                    {t("customer.profile.surname")}
+                  </div>
                   <div className="font-semibold text-gray-900">Əliyeva</div>
                 </div>
               </div>
+
               <div className="flex items-center gap-3 bg-gray-50 rounded-xl p-3 border border-gray-200">
                 <Phone className="w-4 h-4 text-green-600 flex-shrink-0" />
                 <div>
-                  <div className="text-xs text-gray-500 font-medium">{t('customer.profile.phone')}</div>
-                  <div className="font-semibold text-gray-900">+994 51 234 56 78</div>
+                  <div className="text-xs text-gray-500 font-medium">
+                    {t("customer.profile.phone")}
+                  </div>
+                  <div className="font-semibold text-gray-900">
+                    +994 51 234 56 78
+                  </div>
                 </div>
               </div>
+
               <div className="flex items-start gap-3 bg-gray-50 rounded-xl p-3 border border-gray-200">
                 <MapPin className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
                 <div>
-                  <div className="text-xs text-gray-500 font-medium">{t('customer.profile.address')}</div>
-                  <div className="font-semibold text-gray-900">Nəsimi Rayonu, 28 May küçəsi 15, Bakı</div>
+                  <div className="text-xs text-gray-500 font-medium">
+                    {t("customer.profile.address")}
+                  </div>
+                  <div className="font-semibold text-gray-900">
+                    Nəsimi Rayonu, 28 May küçəsi 15, Bakı
+                  </div>
                 </div>
               </div>
             </div>
           </Card>
 
-          {/* Order History Summary */}
           <Card className="p-5 border-2 border-gray-200">
             <h3 className="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
               <div className="w-1 h-4 bg-green-500 rounded-full" />
-              {t('customer.profile.recentOrders')}
+              {t("customer.profile.recentOrders")}
             </h3>
+
             <div className="space-y-3">
               {[
-                { date: "18 Mart 2026", amount: "₼43.50", items: 5, status: "delivered" },
-                { date: "11 Mart 2026", amount: "₼38.00", items: 4, status: "delivered" },
+                { date: "18 Mart 2026", amount: "₼43.50", items: 5 },
+                { date: "11 Mart 2026", amount: "₼38.00", items: 4 }
               ].map((order, idx) => (
-                <div key={idx} className="flex items-center justify-between bg-gray-50 rounded-xl p-3 border border-gray-200">
+                <div
+                  key={idx}
+                  className="flex items-center justify-between bg-gray-50 rounded-xl p-3 border border-gray-200"
+                >
                   <div className="flex items-center gap-3">
                     <div className="bg-green-100 rounded-lg p-2">
                       <ShoppingBag className="w-4 h-4 text-green-600" />
                     </div>
+
                     <div>
-                      <div className="text-sm font-semibold text-gray-900">{translateDemoText(order.date, lang)}</div>
-                      <div className="text-xs text-gray-500">{order.items} {t('tracking.items')}</div>
+                      <div className="text-sm font-semibold text-gray-900">
+                        {translateDemoText(order.date, lang)}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {order.items} {t("tracking.items")}
+                      </div>
                     </div>
                   </div>
+
                   <div className="text-right">
-                    <div className="text-sm font-bold text-gray-900">{order.amount}</div>
+                    <div className="text-sm font-bold text-gray-900">
+                      {order.amount}
+                    </div>
                     <Badge className="bg-green-100 text-green-700 border border-green-200 text-xs">
-                      {t('tracking.delivered')}
+                      {t("tracking.delivered")}
                     </Badge>
                   </div>
                 </div>
@@ -703,10 +897,12 @@ export default function Subscriptions() {
             </div>
           </Card>
 
-          {/* Edit Profile Button */}
-          <Button className="w-full bg-green-600 hover:bg-green-700 h-12 font-semibold rounded-xl shadow-md transition-all hover:scale-[1.01]" onClick={() => setEditProfileOpen(true)}>
+          <Button
+            className="w-full bg-green-600 hover:bg-green-700 h-12 font-semibold rounded-xl shadow-md transition-all hover:scale-[1.01]"
+            onClick={() => setEditProfileOpen(true)}
+          >
             <Edit className="w-4 h-4 mr-2" />
-            {t('customer.profile.editProfile')}
+            {t("customer.profile.editProfile")}
           </Button>
         </TabsContent>
       </Tabs>
