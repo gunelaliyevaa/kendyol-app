@@ -11,51 +11,43 @@ export function BottomNav({ type }: BottomNavProps) {
   const location = useLocation();
   const { t } = useLanguage();
 
-  const customerNav = [
-    { icon: Home, label: t("nav.home"), path: "/customer" },
-    { icon: ShoppingBag, label: t("nav.browse"), path: "/customer/browse" },
-    { icon: Package, label: t("nav.subscriptions"), path: "/customer/subscriptions" },
-    { icon: Clock, label: t("nav.tracking"), path: "/customer/tracking" },
-  ];
-
-  const farmerNav = [
-    { icon: Home, label: t("nav.dashboard"), path: "/farmer" },
-    { icon: Package, label: t("nav.products"), path: "/farmer/products" },
-    { icon: ShoppingBag, label: t("nav.deliveries"), path: "/farmer/deliveries" },
-    { icon: Clock, label: t("nav.earnings"), path: "/farmer/earnings" },
-  ];
-
-  const adminNav = [
-    { icon: Home, label: t("nav.dashboard"), path: "/admin" },
-    { icon: Package, label: t("nav.orders"), path: "/admin/orders" },
-    { icon: MapPin, label: t("nav.routes"), path: "/admin/routes" },
-    { icon: Truck, label: t("nav.vehicles"), path: "/admin/vehicles" },
-  ];
-
-  const driverNav = [
-    { icon: Home, label: t("nav.dashboard"), path: "/driver" },
-    { icon: MapPin, label: t("driver.availableRoutes"), path: "/driver/routes" },
-  ];
-
-  const navItems =
+  const navConfig =
     type === "customer"
-      ? customerNav
+      ? [
+        { icon: Home, label: t("nav.home"), path: "/customer" },
+        { icon: ShoppingBag, label: t("nav.browse"), path: "/customer/browse" },
+        { icon: Package, label: t("nav.subscriptions"), path: "/customer/subscriptions" },
+        { icon: Clock, label: t("nav.tracking"), path: "/customer/tracking" },
+      ]
       : type === "farmer"
-        ? farmerNav
+        ? [
+          { icon: Home, label: t("nav.dashboard"), path: "/farmer" },
+          { icon: Package, label: t("nav.products"), path: "/farmer/products" },
+          { icon: ShoppingBag, label: t("nav.deliveries"), path: "/farmer/deliveries" },
+          { icon: Clock, label: t("nav.earnings"), path: "/farmer/earnings" },
+        ]
         : type === "admin"
-          ? adminNav
-          : driverNav;
+          ? [
+            { icon: Home, label: t("nav.dashboard"), path: "/admin" },
+            { icon: Package, label: t("nav.orders"), path: "/admin/orders" },
+            { icon: MapPin, label: t("nav.routes"), path: "/admin/routes" },
+            { icon: Truck, label: t("nav.vehicles"), path: "/admin/vehicles" },
+          ]
+          : [
+            { icon: Home, label: t("nav.dashboard"), path: "/driver" },
+            { icon: MapPin, label: t("driver.availableRoutes"), path: "/driver/routes" },
+          ];
 
   const activeColor =
     type === "customer"
-      ? "text-green-700 bg-green-50"
+      ? "text-green-700"
       : type === "farmer"
-        ? "text-amber-700 bg-amber-50"
+        ? "text-amber-700"
         : type === "driver"
-          ? "text-indigo-700 bg-indigo-50"
-          : "text-blue-700 bg-blue-50";
+          ? "text-indigo-700"
+          : "text-blue-700";
 
-  const topBar =
+  const activeDot =
     type === "customer"
       ? "bg-green-500"
       : type === "farmer"
@@ -65,42 +57,69 @@ export function BottomNav({ type }: BottomNavProps) {
           : "bg-blue-500";
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 pb-safe">
-      <div className="max-w-md mx-auto bg-white border-t shadow-[0_-4px_20px_rgba(0,0,0,0.10)]">
-        <div className="flex items-center justify-around px-2 py-2">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.path;
+    <nav className="fixed inset-x-0 bottom-0 z-50 pointer-events-none">
+      {/* smaller background lift */}
+      <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#F7F5EF] via-[#F7F5EF]/90 to-transparent" />
 
-            return (
-              <button
-                key={item.label}
-                onClick={() => navigate(item.path)}
-                className={`
-                flex flex-col items-center justify-center gap-1.5
-                px-2 py-2 rounded-xl
-                transition-all duration-200
-                min-w-[64px]
-                ${isActive
-                    ? `${activeColor} scale-105 shadow-sm`
-                    : "text-gray-500 hover:text-gray-800 hover:bg-gray-100 hover:scale-105"
-                  }
-              `}
-                aria-label={item.label}
-                aria-current={isActive ? "page" : undefined}
-              >
-                <Icon className="w-6 h-6" strokeWidth={isActive ? 2.5 : 2} />
+      <div className="relative flex justify-center px-3 pb-[calc(env(safe-area-inset-bottom)+8px)]">
+        <div className="pointer-events-auto w-full max-w-md rounded-3xl border border-white/40 bg-white/85 backdrop-blur-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
+          <div
+            className="grid px-2 py-1.5"
+            style={{
+              gridTemplateColumns: `repeat(${navConfig.length}, minmax(0, 1fr))`,
+            }}
+          >
+            {navConfig.map((item) => {
+              const Icon = item.icon;
+              const isActive = location.pathname === item.path;
 
-                <span className="text-[10px] sm:text-xs font-medium text-center leading-tight whitespace-normal">
-                  {item.label}
-                </span>
+              return (
+                <button
+                  key={item.path}
+                  onClick={() => navigate(item.path)}
+                  className="
+                    min-w-0
+                    flex flex-col items-center justify-center
+                    gap-0.5
+                    px-1 py-1.5
+                    rounded-2xl
+                    transition-all duration-200
+                    active:scale-95
+                  "
+                >
+                  <div
+                    className={`
+                      w-9 h-9 flex items-center justify-center rounded-xl
+                      transition-transform duration-200
+                      ${isActive ? `${activeColor} scale-110` : "text-gray-500"}
+                    `}
+                  >
+                    <Icon className="w-5.5 h-5.5" strokeWidth={isActive ? 2.5 : 2} />
+                  </div>
 
-                {isActive && (
-                  <div className={`h-1 w-7 rounded-full ${topBar}`} />
-                )}
-              </button>
-            );
-          })}
+                  <span
+                    className={`
+                      w-full
+                      text-[9px] sm:text-[10px]
+                      font-medium
+                      text-center
+                      leading-none
+                      whitespace-nowrap
+                      overflow-hidden
+                      text-ellipsis
+                      ${isActive ? activeColor : "text-gray-500"}
+                    `}
+                  >
+                    {item.label}
+                  </span>
+
+                  {isActive && (
+                    <div className={`h-1 w-1 rounded-full mt-0.5 ${activeDot}`} />
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
     </nav>

@@ -15,103 +15,100 @@ interface MobileHeaderProps {
   accentColor?: "green" | "amber" | "blue";
 }
 
-export function MobileHeader({ 
-  title, 
-  showBack = false, 
-  showCart = false, 
+export function MobileHeader({
+  title,
+  showBack = false,
+  showCart = false,
   cartCount = 0,
   onBackClick,
   onProfileClick,
   profilePath = "/customer/subscriptions?tab=profile",
   showProfile = true,
-  accentColor = "green"
+  accentColor = "green",
 }: MobileHeaderProps) {
   const navigate = useNavigate();
 
   const handleBack = () => {
-    if (onBackClick) {
-      onBackClick();
-    } else {
-      navigate(-1);
-    }
+    if (onBackClick) onBackClick();
+    else navigate(-1);
   };
 
   const handleProfile = () => {
-    if (onProfileClick) {
-      onProfileClick();
-    } else {
-      navigate(profilePath);
-    }
+    if (onProfileClick) onProfileClick();
+    else navigate(profilePath);
   };
 
-  const borderColors = {
-    green: "border-b-[4px] border-green-500",
-    amber: "border-b-[4px] border-amber-500",
-    blue: "border-b-[4px] border-blue-500",
-  };
-
-  const titleAccent = {
-    green: "text-green-700",
-    amber: "text-amber-700",
-    blue: "text-blue-700",
+  const stripe = {
+    green: "bg-gradient-to-r from-green-400 via-emerald-500 to-green-600",
+    amber: "bg-gradient-to-r from-amber-400 via-orange-500 to-amber-600",
+    blue: "bg-gradient-to-r from-blue-400 via-indigo-500 to-blue-600",
   };
 
   return (
-    <header className={`sticky top-0 z-50 bg-white ${borderColors[accentColor]} shadow-md`}>
-      {/* Top accent stripe */}
-      <div className={`h-1 w-full ${
-        accentColor === 'green' ? 'bg-gradient-to-r from-green-400 via-emerald-500 to-green-600' :
-        accentColor === 'amber' ? 'bg-gradient-to-r from-amber-400 via-orange-500 to-amber-600' :
-        'bg-gradient-to-r from-blue-400 via-indigo-500 to-blue-600'
-      }`} />
-      <div className="flex items-center justify-between px-4 py-3.5">
-        <div className="flex items-center gap-3 flex-1">
+    <header
+      className="
+        sticky top-0 z-50
+        bg-white
+        shadow-md
+        border-b border-gray-100
+      "
+    >
+      {/* MAIN ROW */}
+      <div className="flex items-center justify-between px-4 py-3 gap-2">
+
+        {/* LEFT */}
+        <div className="flex items-center gap-2 flex-1 min-w-0">
           {showBack && (
-            <button 
-              onClick={handleBack} 
-              className={`p-2 -ml-2 rounded-xl transition-all hover:scale-105 active:scale-95 ${
-                accentColor === 'green' ? 'hover:bg-green-50 text-green-700' :
-                accentColor === 'amber' ? 'hover:bg-amber-50 text-amber-700' :
-                'hover:bg-blue-50 text-blue-700'
-              }`}
-              aria-label="Go back"
+            <button
+              onClick={handleBack}
+              className="p-2 rounded-xl hover:bg-gray-50 active:scale-95"
             >
-              <ArrowLeft className="w-6 h-6" />
+              <ArrowLeft className="w-5 h-5" />
             </button>
           )}
-          <h1 className={`text-xl font-semibold truncate ${titleAccent[accentColor]}`}>{title}</h1>
+
+          <h2
+            className="
+              font-bold text-lg text-[#0F471A]
+              truncate
+            "
+          >
+            {title}
+          </h2>
         </div>
-        
-        <div className="flex items-center gap-2">
+
+        {/* RIGHT */}
+        <div className="flex items-center gap-2 shrink-0">
           <LanguageSwitcher />
-          
+
           {showCart && (
-            <button 
-              className={`p-2 relative rounded-xl transition-all hover:scale-105 active:scale-95 ${
-                accentColor === 'green' ? 'hover:bg-green-50' : 'hover:bg-gray-50'
-              }`}
-              onClick={() => navigate('/customer/cart')}
-              aria-label="Shopping cart"
+            <button
+              className="p-2 relative rounded-xl hover:bg-gray-50"
+              onClick={() => navigate("/customer/cart")}
             >
-              <ShoppingCart className="w-6 h-6 text-gray-700" />
+              <ShoppingCart className="w-5 h-5 text-gray-700" />
+
               {cartCount > 0 && (
-                <Badge className="absolute -top-1 -right-1 h-6 min-w-6 flex items-center justify-center p-0 text-sm font-semibold bg-green-600 border-2 border-white">
+                <Badge className="absolute -top-1 -right-1 h-5 min-w-5 px-1 text-xs bg-green-600 border-2 border-white">
                   {cartCount}
                 </Badge>
               )}
             </button>
           )}
+
           {showProfile && (
-            <button 
-              className="p-2 hover:bg-gray-50 rounded-xl transition-all hover:scale-105 active:scale-95"
+            <button
+              className="p-2 rounded-xl hover:bg-gray-50"
               onClick={handleProfile}
-              aria-label="User profile"
             >
-              <User className="w-6 h-6 text-gray-700" />
+              <User className="w-5 h-5 text-gray-700" />
             </button>
           )}
         </div>
       </div>
+
+      {/* ACCENT STRIPE */}
+      <div className={`h-1 w-full ${stripe[accentColor]}`} />
     </header>
   );
 }
