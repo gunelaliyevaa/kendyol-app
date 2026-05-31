@@ -1,62 +1,49 @@
-import { useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
-import { BrainCircuit, Camera, CheckCircle2, ImagePlus, Leaf, MapPin, ScanLine, ShieldCheck, Sparkles } from "lucide-react";
+import { BrainCircuit, Camera, CheckCircle2, ImagePlus, Leaf, MapPin, Package, PencilLine, ScanLine, ShieldCheck, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { MobileHeader } from "../../components/MobileHeader";
 import { BottomNav } from "../../components/BottomNav";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { catalogProducts, getProductName, getUnitName, type Language } from "../../data/productCatalog";
-import { defaultFarmerProducts, FARMER_PRODUCTS_STORAGE_KEY, readStoredValue, type FarmerProduct } from "../../data/demoStore";
+import { defaultFarmerProducts, FARMER_PRODUCTS_STORAGE_KEY, FARMER_PRODUCTS_UPDATED_EVENT, readStoredValue, type FarmerProduct } from "../../data/demoStore";
 
 export default function FarmerAIAnalysis() {
   const navigate = useNavigate();
   const routeLocation = useLocation();
   const { t, language } = useLanguage();
   const lang = language as Language;
-  const inputRef = useRef<HTMLInputElement>(null);
   const draftProduct = (routeLocation.state as { draftProduct?: Partial<FarmerProduct> } | null)?.draftProduct;
-  const [productId, setProductId] = useState(draftProduct?.productId ?? "tomato");
-  const [quantity, setQuantity] = useState(String(draftProduct?.available ?? 10));
-  const [price, setPrice] = useState(String(draftProduct?.price ?? "2.50"));
-  const [location, setLocation] = useState(draftProduct?.location ?? "Qəbələ");
-  const [preview, setPreview] = useState(draftProduct?.image ?? catalogProducts.find(product => product.id === "tomato")?.image ?? "");
-  const [analyzing, setAnalyzing] = useState(false);
+  const productId = draftProduct?.productId ?? "tomato";
+  const quantity = String(draftProduct?.available ?? 10);
+  const price = String(draftProduct?.price ?? "2.50");
+  const location = draftProduct?.location ?? "Qəbələ";
+  const preview = draftProduct?.image ?? catalogProducts.find(product => product.id === "tomato")?.image ?? "";
+  const [analyzing, setAnalyzing] = useState(true);
   const [showResult, setShowResult] = useState(false);
 
   const selectedProduct = catalogProducts.find(product => product.id === productId) ?? catalogProducts[0];
 
-  const analyze = () => {
-    setAnalyzing(true);
-    setShowResult(false);
-    window.setTimeout(() => {
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
       setAnalyzing(false);
       setShowResult(true);
       toast.success(t("ai.product.complete"));
     }, 800);
-  };
+    return () => window.clearTimeout(timer);
+  }, [t]);
 
-  const selectProduct = (value: string) => {
-    const product = catalogProducts.find(item => item.id === value);
-    setProductId(value);
-    if (product?.image) setPreview(product.image);
-  };
-
-  const handlePhoto = (file?: File) => {
-    if (!file) return;
-    setPreview(URL.createObjectURL(file));
-    toast.success(t("ai.product.photoAdded"));
-  };
+  const editDraft = () => navigate("/farmer/products", {
+    state: { draftProduct, reopenAddDialog: true }
+  });
 
   const publishListing = () => {
     const savedProducts = readStoredValue(FARMER_PRODUCTS_STORAGE_KEY, defaultFarmerProducts);
     const nextId = Math.max(0, ...savedProducts.map(product => product.id)) + 1;
-    const listingImage = preview.startsWith("blob:") ? selectedProduct.image ?? draftProduct?.image ?? "" : preview;
+    const listingImage = preview;
     const listing: FarmerProduct = {
       id: nextId,
       productId,
@@ -72,9 +59,14 @@ export default function FarmerAIAnalysis() {
       location,
     };
 
-    localStorage.setItem(FARMER_PRODUCTS_STORAGE_KEY, JSON.stringify([...savedProducts, listing]));
-    toast.success(t("ai.product.published"));
-    navigate("/farmer/products");
+    try {
+      localStorage.setItem(FARMER_PRODUCTS_STORAGE_KEY, JSON.stringify([...savedProducts, listing]));
+      window.dispatchEvent(new Event(FARMER_PRODUCTS_UPDATED_EVENT));
+      toast.success(t("ai.product.published"));
+      navigate("/farmer/products");
+    } catch {
+      toast.error(t("ai.product.publishFailed"));
+    }
   };
 
   return (
@@ -82,15 +74,17 @@ export default function FarmerAIAnalysis() {
       <MobileHeader title={t("ai.product.title")} showBack profilePath="/farmer/profile" accentColor="amber" />
 
       <div className="p-4 space-y-4">
-        <Card className="p-4 border-2 border-green-200 bg-white">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-green-600 text-white flex items-center justify-center font-bold">1</div>
-            <div className="flex-1 h-1 bg-green-300 rounded-full" />
-            <div className="w-9 h-9 rounded-full bg-amber-600 text-white flex items-center justify-center font-bold">2</div>
-          </div>
-          <div className="grid grid-cols-2 gap-4 mt-2 text-center">
-            <div className="text-xs font-semibold text-green-700">{t("ai.product.stepDetails")}</div>
-            <div className="text-xs font-semibold text-amber-700">{t("ai.product.stepAnalysis")}</div>
+        <Card className="p-3 border-2 border-amber-200 bg-white">
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+            <div className="flex items-center gap-2 rounded-xl bg-green-50 px-2.5 py-2 border border-green-200">
+              <div className="w-7 h-7 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">1</div>
+              <div className="text-xs font-semibold leading-tight text-green-800">{t("ai.product.stepDetails")}</div>
+            </div>
+            <div className="w-4 h-0.5 bg-amber-300 rounded-full" />
+            <div className="flex items-center gap-2 rounded-xl bg-amber-50 px-2.5 py-2 border border-amber-300">
+              <div className="w-7 h-7 rounded-full bg-amber-600 text-white flex items-center justify-center text-xs font-bold">2</div>
+              <div className="text-xs font-semibold leading-tight text-amber-800">{t("ai.product.stepAnalysis")}</div>
+            </div>
           </div>
         </Card>
 
@@ -120,57 +114,41 @@ export default function FarmerAIAnalysis() {
               {t("ai.product.photo")}
             </Badge>
           </div>
-          <div className="p-4">
-            <input
-              ref={inputRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              className="hidden"
-              onChange={event => handlePhoto(event.target.files?.[0])}
-            />
-            <Button variant="outline" onClick={() => inputRef.current?.click()} className="w-full border-2 border-amber-200 text-amber-800 hover:bg-amber-50">
-              <Camera className="w-4 h-4 mr-2" />
-              {t("ai.product.addPhoto")}
-            </Button>
-          </div>
         </Card>
 
-        <Card className="p-4 border-2 border-gray-200 bg-white space-y-4">
-          <div>
-            <Label>{t("catalog.product")}</Label>
-            <Select value={productId} onValueChange={selectProduct}>
-              <SelectTrigger className="border-2 border-gray-200 rounded-xl">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {catalogProducts.filter(product => product.image).map(product => (
-                  <SelectItem key={product.id} value={product.id}>{product.names[lang]}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        <Card className="p-4 border-2 border-gray-200 bg-white space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="font-semibold text-gray-900">{t("ai.product.summary")}</h2>
+            <Button variant="outline" size="sm" onClick={editDraft} className="h-8 border-amber-300 text-amber-800 hover:bg-amber-50">
+              <PencilLine className="w-3.5 h-3.5 mr-1.5" />
+              {t("ai.product.edit")}
+            </Button>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label htmlFor="ai-quantity">{t("ai.product.quantity")}</Label>
-              <Input id="ai-quantity" type="number" value={quantity} onChange={event => setQuantity(event.target.value)} />
-            </div>
-            <div>
-              <Label htmlFor="ai-price">{t("ai.product.price")}</Label>
-              <Input id="ai-price" type="number" value={price} onChange={event => setPrice(event.target.value)} />
-            </div>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              [Package, t("catalog.product"), getProductName(productId, lang)],
+              [Leaf, t("ai.product.quantity"), `${quantity} ${getUnitName(productId, lang)}`],
+              [Sparkles, t("ai.product.price"), `₼${price}`],
+              [MapPin, t("ai.product.location"), location],
+            ].map(([Icon, label, value]) => {
+              const DetailIcon = Icon as typeof Package;
+              return (
+                <div key={label as string} className="rounded-xl border border-gray-200 bg-gray-50 p-2.5">
+                  <div className="flex items-center gap-1.5 text-[11px] font-medium text-gray-500">
+                    <DetailIcon className="w-3.5 h-3.5 text-amber-600" />
+                    {label as string}
+                  </div>
+                  <div className="mt-1 text-sm font-semibold text-gray-900">{value as string}</div>
+                </div>
+              );
+            })}
           </div>
-          <div>
-            <Label htmlFor="ai-location">{t("ai.product.location")}</Label>
-            <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-amber-600" />
-              <Input id="ai-location" className="pl-9" value={location} onChange={event => setLocation(event.target.value)} />
+          {analyzing ? (
+            <div className="flex items-center justify-center gap-2 rounded-xl bg-amber-50 p-3 text-sm font-semibold text-amber-800">
+              <ScanLine className="w-5 h-5 animate-pulse" />
+              {t("ai.product.analyzing")}
             </div>
-          </div>
-          <Button onClick={analyze} disabled={analyzing} className="w-full h-12 bg-amber-600 hover:bg-amber-700 rounded-xl font-semibold">
-            <ScanLine className={`w-5 h-5 mr-2 ${analyzing ? "animate-pulse" : ""}`} />
-            {analyzing ? t("ai.product.analyzing") : t("ai.product.analyze")}
-          </Button>
+          ) : null}
         </Card>
 
         {showResult && (

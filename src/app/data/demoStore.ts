@@ -27,6 +27,7 @@ export interface FarmerProduct {
 export const CART_STORAGE_KEY = "kendyol-cart";
 export const CLAIMED_ROUTE_STORAGE_KEY = "kendyol-claimed-route";
 export const FARMER_PRODUCTS_STORAGE_KEY = "kendyol-farmer-products";
+export const FARMER_PRODUCTS_UPDATED_EVENT = "kendyol-farmer-products-updated";
 export const APPROVED_ROUTES_STORAGE_KEY = "kendyol-approved-routes";
 
 export const defaultCartItems: CartItem[] = [
@@ -69,6 +70,13 @@ export function usePersistentState<T>(key: string, fallback: T) {
   useEffect(() => {
     localStorage.setItem(key, JSON.stringify(value));
   }, [key, value]);
+
+  useEffect(() => {
+    const sync = () => setValue(readStoredValue(key, fallback));
+    const eventName = key === FARMER_PRODUCTS_STORAGE_KEY ? FARMER_PRODUCTS_UPDATED_EVENT : "storage";
+    window.addEventListener(eventName, sync);
+    return () => window.removeEventListener(eventName, sync);
+  }, [fallback, key]);
 
   return [value, setValue] as const;
 }

@@ -8,6 +8,7 @@ import Cart from "./pages/customer/Cart";
 import OrderTracking from "./pages/customer/OrderTracking";
 import FarmerDashboard from "./pages/farmer/FarmerDashboard";
 import FarmerProducts from "./pages/farmer/FarmerProducts";
+import FarmerEditProduct from "./pages/farmer/FarmerEditProduct";
 import FarmerEarnings from "./pages/farmer/FarmerEarnings";
 import FarmerDeliveries from "./pages/farmer/FarmerDeliveries";
 import FarmerProfile from "./pages/farmer/FarmerProfile";
@@ -44,6 +45,7 @@ export const router = createBrowserRouter([
       // Farmer routes
       { path: "farmer", Component: FarmerDashboard },
       { path: "farmer/products", Component: FarmerProducts },
+      { path: "farmer/products/:id/edit", Component: FarmerEditProduct },
       { path: "farmer/deliveries", Component: FarmerDeliveries },
       { path: "farmer/earnings", Component: FarmerEarnings },
       { path: "farmer/profile", Component: FarmerProfile },

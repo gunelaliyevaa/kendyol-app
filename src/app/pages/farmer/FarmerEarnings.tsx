@@ -65,12 +65,13 @@ export default function FarmerEarnings() {
   ];
 
   const weeklyStats = [
-    { week: "Həftə 12", earnings: 245.00 },
-    { week: "Həftə 11", earnings: 188.50 },
-    { week: "Həftə 10", earnings: 156.00 },
-    { week: "Həftə 9", earnings: 198.00 },
+    { week: 9, earnings: 198.00 },
+    { week: 10, earnings: 156.00 },
+    { week: 11, earnings: 188.50 },
+    { week: 12, earnings: 245.00 },
   ];
   const maxWeeklyEarnings = Math.max(...weeklyStats.map((week) => week.earnings));
+  const monthlyTotal = weeklyStats.reduce((sum, week) => sum + week.earnings, 0);
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
@@ -173,7 +174,7 @@ export default function FarmerEarnings() {
           </TabsContent>
 
           <TabsContent value="weekly" className="space-y-3 mt-0">
-            {weeklyStats.map((week) => (
+            {[...weeklyStats].reverse().map((week) => (
               <Card key={week.week} className="p-4 border-2 border-green-200 border-l-4 border-l-green-500 hover:shadow-lg hover:bg-green-50 hover:-translate-y-0.5 transition-all duration-200 cursor-default">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -181,7 +182,7 @@ export default function FarmerEarnings() {
                       <Calendar className="w-5 h-5 text-green-600" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900 mb-1">{week.week.replace('Həftə', t('farmer.earnings.weekLabel'))}</h3>
+                      <h3 className="font-semibold text-gray-900 mb-1">{t('farmer.earnings.weekLabel')} {week.week}</h3>
                       <p className="text-sm text-gray-600">{t('farmer.earnings.march')}</p>
                     </div>
                   </div>
@@ -193,22 +194,31 @@ export default function FarmerEarnings() {
             ))}
 
             {/* Chart */}
-            <Card className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200">
-              <div className="flex items-center gap-2 mb-5">
-                <div className="w-1.5 h-6 bg-green-500 rounded-full" />
-                <h3 className="font-semibold text-gray-900">{t('farmer.earnings.monthlyTrend')}</h3>
+            <Card className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200">
+              <div className="flex items-start justify-between gap-3 mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-6 bg-green-500 rounded-full" />
+                  <div>
+                    <h3 className="font-semibold text-gray-900">{t('farmer.earnings.monthlyTrend')}</h3>
+                    <p className="text-xs text-gray-500">{t('farmer.earnings.march')}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-[11px] text-gray-500">{t('farmer.earnings.monthlyTotal')}</div>
+                  <div className="text-lg font-bold text-green-700">₼{monthlyTotal.toFixed(2)}</div>
+                </div>
               </div>
-              <div className="h-44 flex items-end justify-between gap-2">
+              <div className="h-48 flex items-end justify-between gap-3 border-b border-green-200 px-1">
                 {weeklyStats.map((week, idx) => (
-                  <div key={idx} className="flex-1 flex flex-col items-center group cursor-pointer">
-                    <div className="text-xs text-green-700 font-semibold mb-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      ₼{week.earnings}
+                  <div key={idx} className="h-full flex-1 flex flex-col items-center justify-end">
+                    <div className="text-[11px] text-green-800 font-semibold mb-1">
+                      ₼{week.earnings.toFixed(0)}
                     </div>
                     <div 
-                      className="w-full bg-gradient-to-t from-green-600 to-emerald-400 rounded-t-lg shadow-md group-hover:from-green-700 group-hover:to-emerald-500 transition-all"
-                      style={{ height: `${(week.earnings / maxWeeklyEarnings) * 100}%` }}
+                      className="w-full max-w-12 bg-gradient-to-t from-green-600 to-emerald-400 rounded-t-lg shadow-sm"
+                      style={{ height: `${Math.max(18, (week.earnings / maxWeeklyEarnings) * 74)}%` }}
                     ></div>
-                    <div className="text-xs mt-2 text-gray-600 font-medium">{week.week.replace('Həftə', t('farmer.earnings.weekLabel'))}</div>
+                    <div className="text-[11px] mt-1.5 text-gray-600 font-medium">{t('farmer.earnings.weekShort')} {week.week}</div>
                   </div>
                 ))}
               </div>

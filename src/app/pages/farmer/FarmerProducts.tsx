@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { MobileHeader } from "../../components/MobileHeader";
 import { BottomNav } from "../../components/BottomNav";
 import { Card } from "../../components/ui/card";
@@ -15,36 +15,39 @@ import {
   Edit,
   TrendingUp,
   Package,
-  CheckCircle2,
-  AlertCircle,
-  BrainCircuit
+  Camera,
+  ImagePlus
 } from "lucide-react";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { categories, getProductsByCategory, getUnitName, type Language } from "../../data/productCatalog";
-import { defaultFarmerProducts, FARMER_PRODUCTS_STORAGE_KEY, usePersistentState } from "../../data/demoStore";
-import { toast } from "sonner";
-import { useNavigate } from "react-router";
+import { defaultFarmerProducts, FARMER_PRODUCTS_STORAGE_KEY, usePersistentState, type FarmerProduct } from "../../data/demoStore";
+import { customerProducts } from "../../data/customerProducts";
+import { useLocation, useNavigate } from "react-router";
 
 export default function FarmerProducts() {
   const { t, language } = useLanguage();
   const lang = language as Language;
   const navigate = useNavigate();
-  const [showAddDialog, setShowAddDialog] = useState(false);
-  const [selectedCategoryId, setSelectedCategoryId] = useState('vegetables');
-  const [selectedProductId, setSelectedProductId] = useState('tomato');
+  const routeLocation = useLocation();
+  const restoredDraft = (routeLocation.state as { draftProduct?: Partial<FarmerProduct>; reopenAddDialog?: boolean } | null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const [showAddDialog, setShowAddDialog] = useState(Boolean(restoredDraft?.reopenAddDialog));
+  const [selectedCategoryId, setSelectedCategoryId] = useState(restoredDraft?.draftProduct?.categoryId ?? 'vegetables');
+  const [selectedProductId, setSelectedProductId] = useState(restoredDraft?.draftProduct?.productId ?? 'tomato');
   const productsInCategory = getProductsByCategory(selectedCategoryId);
   const [products] = usePersistentState(FARMER_PRODUCTS_STORAGE_KEY, defaultFarmerProducts);
 
   const [newProduct, setNewProduct] = useState({
     name: "",
-    categoryId: "vegetables",
-    productId: "tomato",
-    category: "medium",
-    price: "",
-    available: "",
-    unit: "kq",
-    message: "",
-    location: "Qəbələ"
+    categoryId: restoredDraft?.draftProduct?.categoryId ?? "vegetables",
+    productId: restoredDraft?.draftProduct?.productId ?? "tomato",
+    category: restoredDraft?.draftProduct?.category ?? "medium",
+    price: restoredDraft?.draftProduct?.price ? String(restoredDraft.draftProduct.price) : "",
+    available: restoredDraft?.draftProduct?.available ? String(restoredDraft.draftProduct.available) : "",
+    unit: restoredDraft?.draftProduct?.unit ?? "kq",
+    message: restoredDraft?.draftProduct?.message ?? "",
+    location: restoredDraft?.draftProduct?.location ?? "Qəbələ",
+    image: restoredDraft?.draftProduct?.image ?? ""
   });
 
   const handleCategoryChange = (catId: string) => {
@@ -72,7 +75,7 @@ export default function FarmerProducts() {
 
   const continueToAnalysis = () => {
     const prod = getProductsByCategory(selectedCategoryId).find(p => p.id === selectedProductId);
-    if (prod && newProduct.price && newProduct.available) {
+    if (prod && newProduct.price && newProduct.available && newProduct.image) {
       navigate("/farmer/ai-analysis", {
         state: {
           draftProduct: {
@@ -84,36 +87,112 @@ export default function FarmerProducts() {
             unit: prod.unitNames[lang],
             message: newProduct.message,
             location: newProduct.location,
-            image: prod.image ?? "https://images.unsplash.com/photo-1557844352-761f2565b576?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200",
+            image: newProduct.image,
           }
         }
       });
     }
   };
 
+  const handlePhoto = (file?: File) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const image = new Image();
+      image.onload = () => {
+        const maxSize = 720;
+        const scale = Math.min(1, maxSize / Math.max(image.width, image.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(image.width * scale);
+        canvas.height = Math.round(image.height * scale);
+        canvas.getContext("2d")?.drawImage(image, 0, 0, canvas.width, canvas.height);
+        setNewProduct(current => ({ ...current, image: canvas.toDataURL("image/jpeg", 0.72) }));
+      };
+      image.src = String(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const activeProducts = products.filter(p => p.status !== 'inactive');
   const totalRevenue = products.reduce((sum, p) => sum + (Math.min(p.available, p.demand) * p.price), 0);
+  const renderProductCard = (product: FarmerProduct, demandView = false) => {
+    const unit = getUnitName(product.productId, lang);
+    const revenue = (Math.min(product.available, product.demand) * product.price).toFixed(2);
+    const image = product.image.startsWith("data:")
+      ? product.image
+      : customerProducts.find(item => item.productId === product.productId)?.image ?? product.image;
+
+    return (
+      <Card key={product.id} className={`p-2 rounded-xl border-2 transition-all duration-200 hover:shadow-md ${
+        product.status === 'low-stock'
+          ? 'border-amber-200 hover:bg-amber-50'
+          : 'border-green-200 hover:bg-green-50'
+      }`}>
+        <div className="flex gap-2.5">
+          <img
+            src={image}
+            alt={getProductsByCategory(product.categoryId).find(p => p.id === product.productId)?.names[lang] ?? product.productId}
+            className="w-20 h-20 object-cover rounded-xl flex-shrink-0"
+          />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-1">
+              <div className="min-w-0">
+                <h3 className="text-sm font-semibold text-gray-900 truncate">
+                  {getProductsByCategory(product.categoryId ?? 'vegetables').find(p => p.id === product.productId)?.names[lang] ?? product.productId}
+                </h3>
+                <div className="text-xs text-gray-600 font-medium">₼{product.price} / {unit}</div>
+              </div>
+              <Button size="sm" variant="ghost" onClick={() => navigate(`/farmer/products/${product.id}/edit`)} className="hover:bg-gray-100 rounded-lg h-7 w-7 p-0 flex-shrink-0">
+                <Edit className="w-3.5 h-3.5" />
+              </Button>
+            </div>
+
+            <div className="flex items-center flex-wrap gap-x-2 gap-y-1 mt-1.5">
+              <Badge className={`text-[10px] px-1.5 py-0 border ${
+                product.status === 'low-stock'
+                  ? 'bg-amber-100 text-amber-800 border-amber-300'
+                  : 'bg-green-100 text-green-800 border-green-300'
+              }`}>
+                {product.status === 'low-stock' ? t('farmer.products.lowStock') : t(demandView ? 'farmer.products.ready' : 'farmer.products.activeStatus')}
+              </Badge>
+              <span className="text-[11px] text-gray-600">
+                {t('farmer.products.available')}: <strong>{product.available} {unit}</strong>
+              </span>
+              <span className="text-[11px] text-gray-600">
+                {t('farmer.products.demand')}: <strong>{product.demand} {unit}</strong>
+              </span>
+            </div>
+
+            <div className="mt-1.5 text-xs font-semibold text-green-800">
+              {demandView ? `${t('farmer.products.canFulfill')} ${Math.min(product.available, product.demand)} ${unit} · ` : ''}
+              {t(demandView ? 'farmer.products.revenue' : 'farmer.products.potential')} ₼{revenue}
+            </div>
+          </div>
+        </div>
+      </Card>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
       <MobileHeader title={t('farmer.products.title')} showBack profilePath="/farmer/profile" accentColor="amber" />
 
       {/* Stats Header */}
-      <div className="bg-white px-6 py-6 border-b-4 border-amber-100">
+      <div className="bg-white px-4 py-4 border-b-4 border-amber-100">
         <div className="grid grid-cols-3 gap-3">
-          <Card className="p-4 text-center border-2 border-green-200 hover:shadow-md transition-all">
-            <div className="text-2xl font-bold mb-1 text-green-700">{activeProducts.length}</div>
-            <div className="text-xs text-gray-600 font-medium">{t('farmer.products.active')}</div>
+          <Card className="aspect-square p-2 flex flex-col items-center justify-center gap-2 text-center border-2 border-green-200 hover:shadow-md transition-all">
+            <div className="text-2xl font-bold leading-none text-green-700">{activeProducts.length}</div>
+            <div className="text-sm leading-tight text-gray-600 font-medium">{t('farmer.products.active')}</div>
           </Card>
-          <Card className="p-4 text-center border-2 border-amber-200 hover:shadow-md transition-all">
-            <div className="text-2xl font-bold mb-1 text-amber-700">₼{totalRevenue.toFixed(0)}</div>
-            <div className="text-xs text-gray-600 font-medium">{t('farmer.products.expectedRevenue')}</div>
+          <Card className="aspect-square p-2 flex flex-col items-center justify-center gap-2 text-center border-2 border-amber-200 hover:shadow-md transition-all">
+            <div className="text-2xl font-bold leading-none text-amber-700">₼{totalRevenue.toFixed(0)}</div>
+            <div className="text-sm leading-tight text-gray-600 font-medium">{t('farmer.products.expectedRevenue')}</div>
           </Card>
-          <Card className="p-4 text-center border-2 border-blue-200 hover:shadow-md transition-all">
-            <div className="text-2xl font-bold mb-1 text-blue-700">
+          <Card className="aspect-square p-2 flex flex-col items-center justify-center gap-2 text-center border-2 border-blue-200 hover:shadow-md transition-all">
+            <div className="text-2xl font-bold leading-none text-blue-700">
               {products.reduce((sum, p) => sum + Math.min(p.available, p.demand), 0)}
             </div>
-            <div className="text-xs text-gray-600 font-medium">{t('farmer.products.inDemand')}</div>
+            <div className="text-sm leading-tight text-gray-600 font-medium">{t('farmer.products.inDemand')}</div>
           </Card>
         </div>
       </div>
@@ -238,11 +317,39 @@ export default function FarmerProducts() {
                 />
               </div>
 
+              <div>
+                <Label>{t('ai.product.photo')} *</Label>
+                <input
+                  ref={photoInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={event => handlePhoto(event.target.files?.[0])}
+                />
+                <button
+                  type="button"
+                  onClick={() => photoInputRef.current?.click()}
+                  className="mt-1 w-full overflow-hidden rounded-xl border-2 border-dashed border-amber-300 bg-amber-50 text-amber-800"
+                >
+                  {newProduct.image ? (
+                    <img src={newProduct.image} alt={t('ai.product.photo')} className="h-28 w-full object-cover" />
+                  ) : (
+                    <span className="flex h-24 flex-col items-center justify-center gap-1 text-sm font-medium">
+                      <ImagePlus className="h-6 w-6" />
+                      {t('ai.product.addPhoto')}
+                    </span>
+                  )}
+                </button>
+                {!newProduct.image && <p className="mt-1 text-xs text-amber-700">{t('ai.product.photoRequired')}</p>}
+              </div>
+
               <Button 
                 className="w-full bg-amber-600 hover:bg-amber-700 h-12 text-base font-semibold rounded-xl" 
                 onClick={continueToAnalysis}
+                disabled={!newProduct.price || !newProduct.available || !newProduct.image}
               >
-                <BrainCircuit className="w-5 h-5 mr-2" />
+                <Camera className="w-5 h-5 mr-2" />
                 {t('ai.product.continue')}
               </Button>
             </div>
@@ -260,121 +367,12 @@ export default function FarmerProducts() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="all" className="space-y-3 mt-0">
-            {products.map((product) => (
-              <Card key={product.id} className={`overflow-hidden border-2 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 ${
-                product.status === 'low-stock' 
-                  ? 'border-amber-200 border-l-4 border-l-amber-500 hover:bg-amber-50' 
-                  : 'border-green-200 border-l-4 border-l-green-500 hover:bg-green-50'
-              }`}>
-                <div className="flex gap-0">
-                  <div className="w-24 flex-shrink-0">
-                    <img
-                      src={product.image}
-                      alt={getProductsByCategory(product.categoryId).find(p => p.id === product.productId)?.names[lang] ?? product.productId}
-                      className="w-24 h-full object-cover min-h-[80px]"
-                    />
-                  </div>
-                  <div className="flex-1 p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900">{getProductsByCategory(product.categoryId ?? 'vegetables').find(p => p.id === product.productId)?.names[lang] ?? product.productId}</h3>
-                        <div className="text-sm text-gray-600 font-medium">₼{product.price} / {getUnitName(product.productId, lang)}</div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {product.status === 'active' ? (
-                          <Badge className="bg-green-100 text-green-800 border border-green-300 font-semibold text-xs">
-                            <CheckCircle2 className="w-3 h-3 mr-1" />{t('farmer.products.activeStatus')}
-                          </Badge>
-                        ) : product.status === 'low-stock' ? (
-                          <Badge className="bg-amber-100 text-amber-800 border border-amber-300 font-semibold text-xs">
-                            <AlertCircle className="w-3 h-3 mr-1" />{t('farmer.products.lowStock')}
-                          </Badge>
-                        ) : null}
-                        <Button size="sm" variant="ghost" onClick={() => toast.info(t('common.detailsOpened'))} className="hover:bg-gray-100 rounded-xl transition-all h-7 w-7 p-0">
-                          <Edit className="w-3.5 h-3.5" />
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2 mb-2">
-                      <div className="bg-gray-50 rounded-lg p-2 border border-gray-200">
-                        <div className="text-xs text-gray-500 font-medium">{t('farmer.products.available')}</div>
-                        <div className="text-sm font-semibold text-gray-900">{product.available} {getUnitName(product.productId, lang)}</div>
-                      </div>
-                      <div className="bg-green-50 rounded-lg p-2 border border-green-200">
-                        <div className="text-xs text-gray-500 font-medium">{t('farmer.products.demand')}</div>
-                        <div className="text-sm font-semibold text-green-700">{product.demand} {getUnitName(product.productId, lang)}</div>
-                      </div>
-                    </div>
-
-                    {product.demand > 0 && (
-                      <div className="bg-green-50 border border-green-200 rounded-lg p-2">
-                        <div className="text-xs text-green-900 font-semibold">
-                          {t('farmer.products.potential')} ₼{(Math.min(product.available, product.demand) * product.price).toFixed(2)}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </Card>
-            ))}
+          <TabsContent value="all" className="space-y-2 mt-0">
+            {products.map(product => renderProductCard(product))}
           </TabsContent>
 
-          <TabsContent value="in-demand" className="space-y-3 mt-0">
-            {products.filter(p => p.demand > 0).map((product) => (
-              <Card key={product.id} className={`overflow-hidden border-2 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 ${
-                product.status === 'low-stock' 
-                  ? 'border-amber-200 border-l-4 border-l-amber-500 hover:bg-amber-50' 
-                  : 'border-green-200 border-l-4 border-l-green-500 hover:bg-green-50'
-              }`}>
-                <div className="flex gap-0">
-                  <div className="w-24 flex-shrink-0">
-                    <img
-                      src={product.image}
-                      alt={getProductsByCategory(product.categoryId).find(p => p.id === product.productId)?.names[lang] ?? product.productId}
-                      className="w-24 h-full object-cover min-h-[80px]"
-                    />
-                  </div>
-                  <div className="flex-1 p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900">{getProductsByCategory(product.categoryId ?? 'vegetables').find(p => p.id === product.productId)?.names[lang] ?? product.productId}</h3>
-                        <div className="text-sm text-gray-600 font-medium">₼{product.price} / {getUnitName(product.productId, lang)}</div>
-                      </div>
-                      {product.status === 'low-stock' ? (
-                        <Badge className="bg-amber-100 text-amber-800 border border-amber-300 font-semibold text-xs">
-                          <AlertCircle className="w-3 h-3 mr-1" />{t('farmer.products.lowStock')}
-                        </Badge>
-                      ) : (
-                        <Badge className="bg-green-100 text-green-800 border border-green-300 font-semibold text-xs">
-                          <CheckCircle2 className="w-3 h-3 mr-1" />{t('farmer.products.ready')}
-                        </Badge>
-                      )}
-                    </div>
-
-                    <div className="bg-gray-50 rounded-lg p-2 mb-2 border border-gray-200 space-y-1">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-gray-500 font-medium">{t('farmer.products.demand')}:</span>
-                        <span className="font-semibold text-gray-900">{product.demand} {getUnitName(product.productId, lang)}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-gray-500 font-medium">{t('farmer.products.stockAvailable')}</span>
-                        <span className="font-semibold text-gray-900">{product.available} {getUnitName(product.productId, lang)}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-xs pt-1 border-t border-gray-200">
-                        <span className="text-gray-500 font-medium">{t('farmer.products.canFulfill')}</span>
-                        <span className="font-bold text-green-700">{Math.min(product.available, product.demand)} {getUnitName(product.productId, lang)}</span>
-                      </div>
-                    </div>
-
-                    <div className="text-base font-bold text-gray-900 bg-green-50 rounded-lg p-2 text-center border border-green-200">
-                      {t('farmer.products.revenue')} ₼{(Math.min(product.available, product.demand) * product.price).toFixed(2)}
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            ))}
+          <TabsContent value="in-demand" className="space-y-2 mt-0">
+            {products.filter(p => p.demand > 0).map(product => renderProductCard(product, true))}
           </TabsContent>
         </Tabs>
       </div>
