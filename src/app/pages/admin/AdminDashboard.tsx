@@ -21,6 +21,7 @@ import { useLanguage } from "../../contexts/LanguageContext";
 import { localize, routes as routesData, translateDemoText } from "../../data/logisticsData";
 import type { Language } from "../../data/productCatalog";
 import { marketplaceAssumptions } from "../../data/marketplaceAssumptions";
+import { DRIVER_ISSUES_STORAGE_KEY, usePersistentState, type DriverIssue } from "../../data/demoStore";
 
 function SectionDivider() {
   return (
@@ -51,6 +52,7 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const { t, language } = useLanguage();
   const lang = language as Language;
+  const [driverIssues] = usePersistentState<DriverIssue[]>(DRIVER_ISSUES_STORAGE_KEY, []);
 
   const stats = [
     { label: t('admin.activeOrders'), value: String(marketplaceAssumptions.startingDailyOrders), icon: Package, color: "text-green-600", bg: "bg-green-100" },
@@ -89,6 +91,12 @@ export default function AdminDashboard() {
   ];
 
   const urgentTasks = [
+    ...driverIssues.map(issue => ({
+      title: `${t("admin.driverReport")}: ${issue.routeId}`,
+      description: issue.message || t(issue.typeKey),
+      priority: "high",
+      time: issue.time,
+    })),
     { 
       title: t('admin.urgentRoute'), 
       description: t('admin.urgentRouteDesc'), 

@@ -1,81 +1,168 @@
 import { useState } from "react";
-import { useNavigate, useSearchParams } from "react-router";
+import { useNavigate } from "react-router";
 import { MobileHeader } from "../../components/MobileHeader";
 import { BottomNav } from "../../components/BottomNav";
 import { Card } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Progress } from "../../components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import {
-  Truck,
-  MapPin,
   Clock,
   CheckCircle2,
   Navigation,
   Package,
-  Star,
   Phone,
-  User,
   Route,
-  CircleCheck
+  CircleCheck,
+  MessageSquareWarning,
+  ExternalLink
 } from "lucide-react";
 import { useLanguage } from "../../contexts/LanguageContext";
-import { CLAIMED_ROUTE_STORAGE_KEY, usePersistentState } from "../../data/demoStore";
-import { ProfileEditDialog } from "../../components/ProfileEditDialog";
+import { APPROVED_ROUTES_STORAGE_KEY, addDriverIssue, CLAIMED_ROUTE_STORAGE_KEY, DRIVER_ROUTE_STATUSES_STORAGE_KEY, usePersistentState } from "../../data/demoStore";
 import { toast } from "sonner";
-import { localize, routes as routesData } from "../../data/logisticsData";
+import { localize, routes as routesData, scheduledRoutes } from "../../data/logisticsData";
 import type { Language } from "../../data/productCatalog";
-import { marketplaceAssumptions } from "../../data/marketplaceAssumptions";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../../components/ui/dialog";
 
 export default function DriverPanel() {
   const { t, language } = useLanguage();
   const lang = language as Language;
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "active");
-  const [claimedRoute] = usePersistentState<string | null>(CLAIMED_ROUTE_STORAGE_KEY, "ID-M001");
-  const [completedStops, setCompletedStops] = useState<number[]>([0]);
-  const [editProfileOpen, setEditProfileOpen] = useState(false);
+  const [claimedRoute] = usePersistentState<string | null>(CLAIMED_ROUTE_STORAGE_KEY, null);
+  const [approvedRoutes] = usePersistentState<string[]>(APPROVED_ROUTES_STORAGE_KEY, []);
+  const [routeStatuses, setRouteStatuses] = usePersistentState<Record<string, string>>(DRIVER_ROUTE_STATUSES_STORAGE_KEY, {});
+  const [completedStops, setCompletedStops] = useState<number[]>([]);
+  const [selectedStopIndex, setSelectedStopIndex] = useState(0);
+  const [issueDialogOpen, setIssueDialogOpen] = useState(false);
+  const [issueTypeKey, setIssueTypeKey] = useState("driver.issue.delay");
+  const [issueMessage, setIssueMessage] = useState("");
 
-  const sharedActiveRoute = routesData[0];
+  const approvedRouteId = approvedRoutes.at(-1);
+  const panelRouteId = approvedRouteId ?? claimedRoute ?? routesData[0].id;
+  const scheduledActiveRoute = scheduledRoutes.find(route => route.id === panelRouteId);
+  const sharedActiveRoute = routesData.find(route => route.id === panelRouteId) ?? routesData[0];
+  const routeStatus = routeStatuses[panelRouteId] ?? (scheduledActiveRoute ? "ready" : "in-progress");
+  const activeStops = scheduledActiveRoute?.stopDetails ?? sharedActiveRoute.stops;
+  const progress = routeStatus === "completed"
+    ? 100
+    : routeStatus === "ready"
+      ? 0
+      : Math.round((completedStops.length / activeStops.length) * 100);
   const myActiveRoute = {
-    id: sharedActiveRoute.id,
-    routeDesc: localize(sharedActiveRoute.routeDesc, lang),
-    progress: Math.max(sharedActiveRoute.progress, Math.round((completedStops.length / sharedActiveRoute.stops.length) * 100)),
-    stops: sharedActiveRoute.stops.map((stop, index) => ({
+    id: panelRouteId,
+    routeDesc: localize(scheduledActiveRoute?.routeDesc ?? sharedActiveRoute.routeDesc, lang),
+    progress,
+    stops: activeStops.map((stop, index) => ({
       ...stop,
       name: localize(stop.location, lang),
-      status: index < completedStops.length ? "completed" : index === completedStops.length ? "current" : "pending",
+      status: routeStatus === "completed" || index < completedStops.length
+        ? "completed"
+        : routeStatus === "in-progress" && index === completedStops.length
+          ? "current"
+          : "pending",
     })),
-    estimatedCompletion: sharedActiveRoute.estimatedCompletion,
-    totalOrders: sharedActiveRoute.stops.reduce((total, stop) => total + stop.orders, 0),
+    estimatedCompletion: scheduledActiveRoute ? localize(scheduledActiveRoute.estimatedTime, lang) : sharedActiveRoute.estimatedCompletion,
+    totalOrders: scheduledActiveRoute?.orders ?? sharedActiveRoute.stops.reduce((total, stop) => total + stop.orders, 0),
   };
 
-  const todayStats = {
-    deliveries: 2,
-    totalOrders: marketplaceAssumptions.startingDailyOrders,
-    distance: "285 km",
-    earnings: "₼55",
-    rating: 4.9
+  const submitIssue = () => {
+    addDriverIssue({ routeId: myActiveRoute.id, typeKey: issueTypeKey, message: issueMessage.trim() });
+    setIssueMessage("");
+    setIssueDialogOpen(false);
+    toast.success(t("driver.issueSent"));
+  };
+  const activeStopIndex = Math.min(completedStops.length, myActiveRoute.stops.length - 1);
+  const routeCompleted = routeStatus === "completed" || completedStops.length >= myActiveRoute.stops.length;
+  const completedOrders = myActiveRoute.stops
+    .filter(stop => stop.status === "completed")
+    .reduce((total, stop) => total + stop.orders, 0);
+  const remainingOrders = Math.max(myActiveRoute.totalOrders - completedOrders, 0);
+  const routeDistance = scheduledActiveRoute?.distance ?? "285 km";
+  const selectedStop = myActiveRoute.stops[selectedStopIndex] ?? myActiveRoute.stops[activeStopIndex];
+  const selectedStopMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${selectedStop.name}, ${selectedStop.address}`)}`;
+  const markCurrentStopDelivered = () => {
+    if (routeStatus === "ready") {
+      setRouteStatuses(current => ({ ...current, [panelRouteId]: "in-progress" }));
+    }
+    setCompletedStops(previous => {
+      if (previous.length >= myActiveRoute.stops.length) return previous;
+      const next = [...previous, previous.length];
+      setSelectedStopIndex(Math.min(next.length, myActiveRoute.stops.length - 1));
+      if (next.length >= myActiveRoute.stops.length) {
+        setRouteStatuses(current => ({ ...current, [panelRouteId]: "completed" }));
+      }
+      return next;
+    });
+    toast.success(t("driver.stopCompleted"));
+  };
+  const updateRouteStatus = (status: string) => {
+    setRouteStatuses(current => ({ ...current, [panelRouteId]: status }));
+    if (status === "ready") {
+      setCompletedStops([]);
+      setSelectedStopIndex(0);
+    }
+    if (status === "in-progress" && completedStops.length >= myActiveRoute.stops.length) {
+      setCompletedStops([]);
+      setSelectedStopIndex(0);
+    }
+    if (status === "completed") {
+      setCompletedStops(myActiveRoute.stops.map((_, index) => index));
+    }
+    toast.success(t("driver.routeStatusUpdated"));
   };
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
-      <MobileHeader title={t('customer.home.title')} titlePath="/" accentColor="blue" onProfileClick={() => setActiveTab("profile")} />
-      <ProfileEditDialog open={editProfileOpen} onOpenChange={setEditProfileOpen} name="Elvin Məmmədov" phone="+994 70 987 65 43" accent="blue" />
+      <MobileHeader title={t('customer.home.title')} titlePath="/" profilePath="/driver/profile" accentColor="blue" />
+      <Dialog open={issueDialogOpen} onOpenChange={setIssueDialogOpen}>
+        <DialogContent className="rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>{t("driver.reportIssue")}</DialogTitle>
+            <DialogDescription>{t("driver.reportIssueDesc")}</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-2">
+            {["driver.issue.delay", "driver.issue.pickup", "driver.issue.vehicle"].map((typeKey) => (
+              <button
+                key={typeKey}
+                type="button"
+                onClick={() => setIssueTypeKey(typeKey)}
+                className={`text-left rounded-xl border px-3 py-2.5 text-sm font-medium ${issueTypeKey === typeKey ? "border-red-300 bg-red-50 text-red-800" : "border-gray-200 bg-white text-gray-700"}`}
+              >
+                {t(typeKey)}
+              </button>
+            ))}
+          </div>
+          <textarea
+            value={issueMessage}
+            onChange={(event) => setIssueMessage(event.target.value)}
+            placeholder={t("driver.issueNote")}
+            className="min-h-24 w-full resize-none rounded-xl border border-gray-200 p-3 text-sm outline-none focus:border-red-300"
+          />
+          <Button onClick={submitIssue} className="w-full h-11 rounded-xl bg-red-600 hover:bg-red-700 font-semibold">
+            <MessageSquareWarning className="w-4 h-4 mr-2" />
+            {t("driver.sendIssue")}
+          </Button>
+        </DialogContent>
+      </Dialog>
 
-      {/* Driver Dashboard Header */}
-      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white px-6 py-6">
-        {/* Today Stats */}
-        <div className="grid grid-cols-4 gap-2">
+      {/* Active Route Summary */}
+      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white px-4 py-4">
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <div>
+            <div className="text-xs text-blue-100 font-medium">{t("driver.routeSummary")}</div>
+            <div className="text-sm font-semibold mt-0.5">{myActiveRoute.id} · {myActiveRoute.routeDesc}</div>
+          </div>
+          <Badge className="bg-white/20 text-white border border-white/30 text-xs">
+            {t(routeStatus === "completed" ? "driver.routeCompleted" : routeStatus === "ready" ? "driver.readyToStart" : "driver.inProgress")}
+          </Badge>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
           {[
-            { label: t('driver.deliveries'), value: todayStats.deliveries },
-            { label: t('driver.orders'), value: todayStats.totalOrders },
-            { label: t('driver.totalDistance'), value: todayStats.distance },
-            { label: t('driver.earnings'), value: todayStats.earnings },
+            { label: t('driver.completedStops'), value: `${myActiveRoute.stops.filter(stop => stop.status === "completed").length}/${myActiveRoute.stops.length}` },
+            { label: t('driver.remainingOrders'), value: remainingOrders },
+            { label: t('driver.distance'), value: routeDistance },
           ].map((stat, idx) => (
-            <div key={idx} className="bg-white/15 rounded-xl p-2.5 text-center">
+            <div key={idx} className="bg-white/15 rounded-xl p-2 text-center">
               <div className="text-base font-bold">{stat.value}</div>
               <div className="text-xs text-blue-100 font-medium leading-tight">{stat.label}</div>
             </div>
@@ -83,31 +170,45 @@ export default function DriverPanel() {
         </div>
       </div>
 
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="bg-white border-b-4 border-blue-100 sticky top-[57px] z-40 shadow-sm px-4 pt-3 pb-0">
-          <TabsList className="w-full bg-blue-50 p-1 rounded-xl border-2 border-blue-100">
-            <TabsTrigger value="active" className="flex-1 rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white font-medium text-xs">
-              {t('driver.activeDelivery')}
-            </TabsTrigger>
-          </TabsList>
+      <div className="px-4 py-3">
+        <div className="flex items-center gap-2">
+          <div className="w-1 h-5 bg-blue-500 rounded-full" />
+          <h2 className="text-base font-semibold text-gray-900">{t('driver.activeDelivery')}</h2>
         </div>
+      </div>
 
-        {/* Active Delivery Tab */}
-        <TabsContent value="active" className="p-4 space-y-4 mt-0">
+      <div className="px-4 pb-4">
           {claimedRoute ? (
             <>
               {/* Active Route Header */}
               <Card className="overflow-hidden border-2 border-blue-300 border-l-4 border-l-blue-500">
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 border-b border-blue-100">
-                  <div className="flex items-start justify-between mb-3">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-3 border-b border-blue-100">
+                  <div className="flex items-start justify-between mb-2">
                     <div>
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-xs text-blue-600 font-semibold uppercase tracking-wide">{t('admin.route.id')}</span>
                         <span className="font-bold text-gray-900">{myActiveRoute.id}</span>
-                        <Badge className="bg-blue-600 text-white text-xs font-semibold">{t('driver.inProgress')}</Badge>
+                        <Badge className={`text-xs font-semibold ${routeStatus === "completed" ? "bg-green-600 text-white" : routeStatus === "ready" ? "bg-amber-500 text-white" : "bg-blue-600 text-white"}`}>
+                          {t(routeStatus === "completed" ? "driver.routeCompleted" : routeStatus === "ready" ? "driver.readyToStart" : "driver.inProgress")}
+                        </Badge>
                       </div>
                       <p className="text-xs text-gray-600 font-medium">{myActiveRoute.routeDesc}</p>
+                    </div>
+                  </div>
+
+                  <div className="mb-3">
+                    <div className="text-xs text-gray-500 font-medium mb-1.5">{t("driver.changeRouteStatus")}</div>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {["ready", "in-progress", "completed"].map(status => (
+                        <button
+                          key={status}
+                          type="button"
+                          onClick={() => updateRouteStatus(status)}
+                          className={`rounded-lg border px-2 py-2 text-xs font-semibold transition-colors ${routeStatus === status ? "border-blue-500 bg-blue-600 text-white" : "border-blue-100 bg-white text-gray-600"}`}
+                        >
+                          {t(status === "ready" ? "driver.readyToStart" : status === "in-progress" ? "driver.inProgress" : "driver.routeCompleted")}
+                        </button>
+                      ))}
                     </div>
                   </div>
 
@@ -126,13 +227,32 @@ export default function DriverPanel() {
                 </div>
 
                 {/* Next Stop Highlight */}
-                <div className="p-4 bg-white">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-1 h-5 bg-blue-500 rounded-full" />
+                <div className="p-3 bg-white">
+                  <div className="flex items-center justify-between gap-2 mb-2">
                     <span className="text-sm font-semibold text-gray-800">{t('driver.nextStop')}</span>
+                    <Badge className="bg-blue-100 text-blue-700 border border-blue-200 text-xs">{activeStopIndex + 1}/{myActiveRoute.stops.length}</Badge>
                   </div>
-                  {myActiveRoute.stops.filter(s => s.status === 'current').map((stop, idx) => (
-                    <div key={idx} className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 mb-3">
+                  {routeStatus === "ready" ? (
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-3">
+                      <div className="text-sm font-semibold text-amber-900">{t("driver.routeApprovedReady")}</div>
+                      <div className="text-xs text-amber-700 mt-0.5">{t("driver.routeApprovedReadyDesc")}</div>
+                      <Button onClick={() => updateRouteStatus("in-progress")} className="w-full mt-3 h-10 rounded-xl bg-amber-500 hover:bg-amber-600 font-semibold">
+                        <Navigation className="w-4 h-4 mr-2" />
+                        {t("driver.startDelivery")}
+                      </Button>
+                    </div>
+                  ) : routeCompleted ? (
+                    <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl p-3 mb-3">
+                      <CheckCircle2 className="w-6 h-6 text-green-600" />
+                      <div>
+                        <div className="text-sm font-semibold text-green-900">{t("driver.routeCompleted")}</div>
+                        <div className="text-xs text-green-700 mt-0.5">{t("driver.routeCompletedDesc")}</div>
+                      </div>
+                    </div>
+                  ) : myActiveRoute.stops.filter(s => s.status === 'current').map((stop, idx) => {
+                    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${stop.name}, ${stop.address}`)}`;
+                    return (
+                    <div key={idx} className="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-3">
                       <div className="flex items-start gap-3">
                         <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center shadow-md">
                           <Navigation className="w-5 h-5 text-white" />
@@ -151,26 +271,28 @@ export default function DriverPanel() {
                         </div>
                       </div>
                       <div className="flex gap-2 mt-3">
-                        <Button onClick={() => toast.success(t('common.demoUpdated'))} className="flex-1 bg-blue-600 hover:bg-blue-700 h-10 font-semibold text-sm rounded-xl">
-                          <Navigation className="w-4 h-4 mr-2" />
+                        <Button asChild className="flex-1 bg-blue-600 hover:bg-blue-700 h-10 font-semibold text-sm rounded-xl">
+                          <a href={mapsUrl} target="_blank" rel="noreferrer">
+                          <ExternalLink className="w-4 h-4 mr-2" />
                           {t('driver.navigationStart')}
+                          </a>
                         </Button>
                         <Button variant="outline" onClick={() => { window.location.href = "tel:+994123456789"; }} className="h-10 px-3 border-2 border-blue-200 text-blue-700 hover:bg-blue-50 rounded-xl">
                           <Phone className="w-4 h-4" />
                         </Button>
                       </div>
                     </div>
-                  ))}
+                  )})}
 
                   {/* All Stops */}
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-1 h-5 bg-gray-300 rounded-full" />
-                    <span className="text-sm font-semibold text-gray-700">{t('driver.allStops')}</span>
+                    <span className="text-sm font-semibold text-gray-700">{t('driver.routeStops')}</span>
                   </div>
                   <div className="space-y-2">
                     {myActiveRoute.stops.map((stop, idx) => (
-                      <div key={idx} className="flex gap-3">
-                        <div className="flex flex-col items-center">
+                      <button key={idx} type="button" onClick={() => setSelectedStopIndex(idx)} className="w-full flex gap-2 text-left">
+                        <div className="flex flex-col items-center shrink-0">
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center shadow-sm text-xs font-bold ${
                             stop.status === 'completed' ? 'bg-green-500 text-white' :
                             stop.status === 'current' ? 'bg-blue-600 text-white ring-4 ring-blue-100' :
@@ -182,30 +304,42 @@ export default function DriverPanel() {
                             <div className={`w-0.5 h-7 mt-1 ${stop.status === 'completed' ? 'bg-green-300' : 'bg-gray-200'}`} />
                           )}
                         </div>
-                        <div className={`flex-1 rounded-xl px-3 py-2 mb-0 ${stop.status === 'current' ? 'bg-blue-50 border border-blue-200' : ''}`}>
-                          <div className="flex items-center justify-between">
-                            <h4 className={`text-sm font-medium ${stop.status === 'current' ? 'text-blue-700' : stop.status === 'completed' ? 'text-gray-400 line-through' : 'text-gray-800'}`}>
+                        <div className={`flex-1 min-w-0 h-10 rounded-xl px-2.5 border flex items-center ${selectedStopIndex === idx ? 'bg-indigo-50 border-indigo-300' : stop.status === 'current' ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-100'}`}>
+                          <div className="flex items-center justify-between w-full">
+                            <h4 className={`text-sm font-medium truncate ${stop.status === 'current' ? 'text-blue-700' : stop.status === 'completed' ? 'text-gray-400 line-through' : 'text-gray-800'}`}>
                               {stop.name}
                             </h4>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 shrink-0 ml-2">
                               <span className="text-xs text-gray-500">{stop.time}</span>
                               <span className="text-xs font-medium text-gray-600">{stop.orders} {t('driver.orders')}</span>
                             </div>
                           </div>
                         </div>
-                      </div>
+                      </button>
                     ))}
                   </div>
 
-                  <Button 
-                    onClick={() => {
-                      setCompletedStops(prev => prev.length >= myActiveRoute.stops.length ? prev : [...prev, prev.length]);
-                      toast.success(t('common.demoUpdated'));
-                    }}
-                    className="w-full mt-4 bg-green-600 hover:bg-green-700 h-11 font-semibold rounded-xl shadow-md"
+                  {routeStatus === "in-progress" && (
+                    <div className="grid grid-cols-2 gap-2 mt-3">
+                      <Button asChild variant="outline" className="h-10 rounded-xl border-blue-200 text-blue-700">
+                        <a href={selectedStopMapsUrl} target="_blank" rel="noreferrer">
+                          <Navigation className="w-4 h-4 mr-1.5" />
+                          {t("driver.openSelected")}
+                        </a>
+                      </Button>
+                      <Button disabled={routeCompleted} onClick={markCurrentStopDelivered} className="h-10 bg-green-600 hover:bg-green-700 font-semibold rounded-xl">
+                        <CircleCheck className="w-4 h-4 mr-1.5" />
+                        {t(routeCompleted ? "driver.routeCompleted" : 'driver.completeCurrent')}
+                      </Button>
+                    </div>
+                  )}
+                  <Button
+                    variant="outline"
+                    onClick={() => setIssueDialogOpen(true)}
+                    className="w-full mt-2 border-2 border-red-200 text-red-700 hover:bg-red-50 h-10 font-semibold rounded-xl"
                   >
-                    <CircleCheck className="w-4 h-4 mr-2" />
-                    {t('driver.markDelivered')}
+                    <MessageSquareWarning className="w-4 h-4 mr-2" />
+                    {t("driver.reportIssue")}
                   </Button>
                 </div>
               </Card>
@@ -220,87 +354,7 @@ export default function DriverPanel() {
               </Button>
             </Card>
           )}
-        </TabsContent>
-
-        {/* Profile Tab */}
-        <TabsContent value="profile" className="p-4 space-y-4 mt-0">
-          {/* Driver Profile Card */}
-          <Card className="overflow-hidden border-2 border-blue-200">
-            <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-5">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-16 h-16 bg-white/20 rounded-2xl border-2 border-white/30 flex items-center justify-center shadow-lg">
-                  <User className="w-8 h-8 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-semibold text-white mb-0.5">Elvin Məmmədov</h2>
-                  <p className="text-blue-100 text-sm">ID: KY-DRV-0042</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Badge className="bg-green-500/80 text-white border-0 text-xs">{t('driver.activeDriver')}</Badge>
-                  </div>
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                <div className="bg-white/15 rounded-xl p-2.5 text-center">
-                  <div className="flex items-center justify-center gap-1 mb-0.5">
-                    <Star className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
-                    <span className="font-bold text-white">4.9</span>
-                  </div>
-                  <div className="text-xs text-blue-100">{t('driver.rating')}</div>
-                </div>
-                <div className="bg-white/15 rounded-xl p-2.5 text-center">
-                  <div className="font-bold text-white mb-0.5">248</div>
-                  <div className="text-xs text-blue-100">{t('driver.deliveries')}</div>
-                </div>
-                <div className="bg-white/15 rounded-xl p-2.5 text-center">
-                  <div className="font-bold text-white mb-0.5">98%</div>
-                  <div className="text-xs text-blue-100">{t('driver.onTime')}</div>
-                </div>
-              </div>
-            </div>
-            <div className="p-4 bg-white space-y-2">
-              {[
-                { label: t('driver.vehicle'), value: `${marketplaceAssumptions.pilotVehicle} - 10BH456` },
-                { label: t('driver.phone'), value: "+994 70 987 65 43" },
-                { label: t('driver.memberSince'), value: "2022" },
-                { label: t('driver.areas'), value: "Bakı şəhəri - bütün rayonlar" },
-              ].map((item, idx) => (
-                <div key={idx} className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-2.5 border border-gray-100">
-                  <span className="text-xs text-gray-500 font-medium">{item.label}</span>
-                  <span className="text-sm font-semibold text-gray-900">{item.value}</span>
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          {/* Recent Earnings */}
-          <Card className="p-5 border-2 border-gray-200">
-            <h3 className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
-              <div className="w-1 h-4 bg-green-500 rounded-full" />
-              {t('driver.recentEarnings')}
-            </h3>
-            <div className="space-y-2">
-              {[
-                { date: t('driver.thisWeek'), amount: "₼145", deliveries: 6, status: "paid" },
-                { date: t('driver.lastWeek'), amount: "₼132", deliveries: 5, status: "paid" },
-              ].map((earning, idx) => (
-                <div key={idx} className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-3 border border-gray-100">
-                  <div>
-                    <div className="text-sm font-semibold text-gray-900">{earning.date}</div>
-                    <div className="text-xs text-gray-500">{earning.deliveries} {t('driver.deliveries')}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-base font-bold text-green-700">{earning.amount}</div>
-                    <Badge className="bg-green-100 text-green-700 border border-green-200 text-xs">{t('driver.paid')}</Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-          <Button onClick={() => setEditProfileOpen(true)} className="w-full bg-blue-600 hover:bg-blue-700 h-11 rounded-xl font-semibold">
-            {t('common.editProfile')}
-          </Button>
-        </TabsContent>
-      </Tabs>
+      </div>
 
       <BottomNav type="driver" />
     </div>

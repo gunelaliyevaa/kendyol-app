@@ -10,9 +10,9 @@ export const marketplaceAssumptions = {
   pilotVehicle: "Ford Transit Custom Cargo",
   pilotVehicleCapacity: 25,
   pilotRoute: {
-    az: "Şamaxı -> Bakı",
-    en: "Shamakhi -> Baku",
-    ru: "Шемаха -> Баку",
+    az: "Şamaxı → Bakı",
+    en: "Shamakhi → Baku",
+    ru: "Шемаха → Баку",
   },
 } as const;
 

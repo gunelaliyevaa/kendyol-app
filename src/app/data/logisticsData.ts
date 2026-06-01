@@ -3,6 +3,18 @@ import { marketplaceAssumptions } from "./marketplaceAssumptions";
 
 type Localized = Readonly<Record<Language, string>>;
 
+export const farmerCollectionHub = {
+  name: { az: "Şamaxı Rayon Mərkəzi", en: "Shamakhi District Hub", ru: "Центр района Шемаха" },
+  address: { az: "Şamaxı şəhəri, M.Ə.Rəsulzadə küç. 18", en: "18 M.A. Rasulzade St, Shamakhi", ru: "г. Шемаха, ул. М.А. Расулзаде, 18" },
+  pickupTime: "Bazar ertəsi, 18:00",
+};
+
+export const farmerCollectionOrders = [
+  { id: "YGM-2603-01", farmer: "Rəna Əliyeva", phone: "+994501112233", product: { az: "Pomidor", en: "Tomatoes", ru: "Помидоры" }, quantity: "12 kq", status: "ready" },
+  { id: "YGM-2603-02", farmer: "Vüqar Məmmədov", phone: "+994502223344", product: { az: "İspanaq", en: "Spinach", ru: "Шпинат" }, quantity: "8 dəstə", status: "ready" },
+  { id: "YGM-2603-03", farmer: "Aynur Həsənova", phone: "+994503334455", product: { az: "Xiyar", en: "Cucumbers", ru: "Огурцы" }, quantity: "15 kq", status: "pending" },
+];
+
 export const routes = [
   {
     id: "ID-M001",
@@ -25,9 +37,9 @@ export const routes = [
     id: "ID-M002",
     batchId: "ID-B2603",
     routeDesc: {
-      az: "Suraxanı -> Binəqədi -> Qaradağ",
-      en: "Surakhani -> Binagadi -> Garadagh",
-      ru: "Сураханы -> Бинагади -> Гарадаг",
+      az: "Suraxanı → Binəqədi → Qaradağ",
+      en: "Surakhani → Binagadi → Garadagh",
+      ru: "Сураханы → Бинагади → Гарадаг",
     },
     driver: "Fərid Axundov",
     driverShort: "Fərid A.",
@@ -46,7 +58,7 @@ export const routes = [
   {
     id: "ID-M003",
     batchId: "ID-B2602",
-    routeDesc: { az: "Səbail -> Nizami", en: "Sabail -> Nizami", ru: "Сабаил -> Низами" },
+    routeDesc: { az: "Səbail → Nizami", en: "Sabail → Nizami", ru: "Сабаил → Низами" },
     driver: "Rəmil Süleymanov",
     driverShort: "Rəmil S.",
     vehicle: "Mikroavtobus #7",
@@ -64,25 +76,37 @@ export const routes = [
 export const scheduledRoutes = [
   {
     id: "ID-M004",
-    routeDesc: { az: "Şamaxı -> Bakı (Pilot)", en: "Shamakhi -> Baku (Pilot)", ru: "Шемаха -> Баку (Пилот)" },
+    routeDesc: { az: "Şamaxı → Bakı (Pilot)", en: "Shamakhi → Baku (Pilot)", ru: "Шемаха → Баку (Пилот)" },
     date: { az: "Sabah", en: "Tomorrow", ru: "Завтра" },
     driver: { az: "Təyin edilməyib", en: "Unassigned", ru: "Не назначен" },
     stops: 4,
     orders: 25,
     distance: "285 km",
     estimatedTime: { az: "4s 30d", en: "4h 30m", ru: "4ч 30м" },
+    stopDetails: [
+      { location: { az: "Yasamal Mərkəzi", en: "Yasamal Hub", ru: "Центр Ясамала" }, orders: 6, time: "12:45", address: "Əliağa Vahid küç. 8" },
+      { location: { az: "Nəsimi Rayon Mərkəzi", en: "Nasimi District Hub", ru: "Центр района Насими" }, orders: 7, time: "13:20", address: "28 May küç. 15" },
+      { location: { az: "Sabunçu Mərkəzi", en: "Sabunchu Hub", ru: "Центр Сабунчи" }, orders: 6, time: "14:10", address: "M. Müşfiq küç. 12" },
+      { location: { az: "Xətai Mərkəzi", en: "Khatai Hub", ru: "Центр Хатаи" }, orders: 6, time: "15:00", address: "Xocalı prospekti 24" },
+    ],
     area: { az: "Bakı", en: "Baku", ru: "Баку" },
     ai: { score: 94, cost: "₼126", time: { az: "4s 30d", en: "4h 30m", ru: "4ч 30м" }, finding: { az: "Şamaxı sifarişlərini bir həftəlik partiyada toplamaq Ford Transit tutumundan tam istifadə edir və şəhərdaxili dayanacaqları birləşdirir.", en: "Grouping Shamakhi orders into one weekly batch uses the Ford Transit capacity fully and combines city stops.", ru: "Объединение заказов из Шемахи в одну недельную партию полностью использует вместимость Ford Transit и объединяет городские остановки." } },
   },
   {
     id: "ID-M005",
-    routeDesc: { az: "Lənkəran -> Salyan -> Bakı (Cənub)", en: "Lankaran -> Salyan -> Baku (South)", ru: "Ленкорань -> Сальян -> Баку (Юг)" },
+    routeDesc: { az: "Lənkəran → Salyan → Bakı (Cənub)", en: "Lankaran → Salyan → Baku (South)", ru: "Ленкорань → Сальян → Баку (Юг)" },
     date: { az: "Sabah", en: "Tomorrow", ru: "Завтра" },
     driver: { az: "Təyin edilməyib", en: "Unassigned", ru: "Не назначен" },
     stops: 4,
     orders: 65,
     distance: "55 km",
     estimatedTime: { az: "4s 10d", en: "4h 10m", ru: "4ч 10м" },
+    stopDetails: [
+      { location: { az: "Lənkəran Mərkəzi", en: "Lankaran Hub", ru: "Центр Ленкорани" }, orders: 18, time: "09:30", address: "H. Aslanov küç. 14" },
+      { location: { az: "Salyan Mərkəzi", en: "Salyan Hub", ru: "Центр Сальяна" }, orders: 16, time: "10:45", address: "Heydər Əliyev prospekti 31" },
+      { location: { az: "Qaradağ Mərkəzi", en: "Garadagh Hub", ru: "Центр Гарадага" }, orders: 15, time: "12:30", address: "Lökbatan qəsəbəsi 6" },
+      { location: { az: "Yasamal Mərkəzi", en: "Yasamal Hub", ru: "Центр Ясамала" }, orders: 16, time: "13:40", address: "Əliağa Vahid küç. 8" },
+    ],
     area: { az: "Cənub Bakı", en: "South Baku", ru: "Южный Баку" },
     ai: { score: 88, cost: "₼104", time: { az: "4s 10d", en: "4h 10m", ru: "4ч 10м" }, finding: { az: "Daha ucuz variantdır, amma soyuducu məhsullar üçün 45 dəqiqə əlavə risk yaradır.", en: "Cheaper option, but adds 45 minutes of risk for chilled products.", ru: "Более дешёвый вариант, но добавляет 45 минут риска для охлаждённых товаров." } },
   },

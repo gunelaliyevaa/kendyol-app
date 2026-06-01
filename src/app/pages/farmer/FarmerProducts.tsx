@@ -16,13 +16,15 @@ import {
   TrendingUp,
   Package,
   Camera,
-  ImagePlus
+  ImagePlus,
+  MapPin
 } from "lucide-react";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { categories, getProductsByCategory, getUnitName, type Language } from "../../data/productCatalog";
 import { defaultFarmerProducts, FARMER_PRODUCTS_STORAGE_KEY, usePersistentState, type FarmerProduct } from "../../data/demoStore";
 import { customerProducts } from "../../data/customerProducts";
 import { useLocation, useNavigate } from "react-router";
+import { farmerCollectionHub, localize } from "../../data/logisticsData";
 
 export default function FarmerProducts() {
   const { t, language } = useLanguage();
@@ -372,6 +374,16 @@ export default function FarmerProducts() {
           </TabsContent>
 
           <TabsContent value="in-demand" className="space-y-2 mt-0">
+            <Card className="p-3 border-2 border-amber-200 border-l-4 border-l-amber-500 bg-amber-50">
+              <div className="flex items-start gap-2">
+                <MapPin className="w-4 h-4 mt-0.5 text-amber-700 shrink-0" />
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900">{t("farmer.products.hubDemandTitle")}</h3>
+                  <p className="text-xs text-gray-600 mt-1 leading-relaxed">{t("farmer.products.hubDemandDesc")}</p>
+                  <p className="text-xs font-semibold text-amber-800 mt-1">{localize(farmerCollectionHub.name, lang)} · {localize(farmerCollectionHub.address, lang)}</p>
+                </div>
+              </div>
+            </Card>
             {products.filter(p => p.demand > 0).map(product => renderProductCard(product, true))}
           </TabsContent>
         </Tabs>

@@ -1,4 +1,4 @@
-import { Home, Package, ShoppingBag, Clock, Truck, MapPin } from "lucide-react";
+import { Home, Package, ShoppingBag, Clock, Truck, MapPin, Warehouse } from "lucide-react";
 import { useNavigate, useLocation } from "react-router";
 import { useLanguage } from "../contexts/LanguageContext";
 
@@ -35,6 +35,7 @@ export function BottomNav({ type }: BottomNavProps) {
           ]
           : [
             { icon: Home, label: t("nav.dashboard"), path: "/driver" },
+            { icon: Warehouse, label: t("driver.collectionsNav"), path: "/driver/collections" },
             { icon: MapPin, label: t("driver.availableRoutes"), path: "/driver/routes" },
           ];
 

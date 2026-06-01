@@ -21,6 +21,8 @@ import AdminStorage from "./pages/admin/AdminStorage";
 import AdminAIRoutePlanner from "./pages/admin/AdminAIRoutePlanner";
 import DriverPanel from "./pages/driver/DriverPanel";
 import DriverRoutes from "./pages/driver/DriverRoutes";
+import DriverProfile from "./pages/driver/DriverProfile";
+import DriverCollections from "./pages/driver/DriverCollections";
 import UserTypeSelector from "./pages/UserTypeSelector";
 import UXDocumentation from "./pages/UXDocumentation";
 import ScreenShowcase from "./pages/ScreenShowcase";
@@ -54,6 +56,8 @@ export const router = createBrowserRouter([
       // Driver routes
       { path: "driver", Component: DriverPanel },
       { path: "driver/routes", Component: DriverRoutes },
+      { path: "driver/profile", Component: DriverProfile },
+      { path: "driver/collections", Component: DriverCollections },
       
       // Admin routes
       { path: "admin", Component: AdminDashboard },
