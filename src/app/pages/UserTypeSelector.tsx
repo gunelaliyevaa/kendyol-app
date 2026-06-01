@@ -3,12 +3,10 @@ import {
   ShoppingBag,
   Sprout,
   Settings,
-  FileText,
   ChevronRight,
   Truck,
 } from "lucide-react";
 import { Card } from "../components/ui/card";
-import { Button } from "../components/ui/button";
 
 export default function UserTypeSelector() {
   const navigate = useNavigate();
@@ -41,10 +39,7 @@ export default function UserTypeSelector() {
   ];
 
   return (
-    <div
-      className="min-h-screen flex flex-col items-center justify-center p-6"
-      style={{ backgroundColor: "#F7F5EF" }}
-    >
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6">
       <div className="max-w-md w-full">
         {/* Logo and Title */}
         <div className="text-center mb-10">
@@ -79,12 +74,12 @@ export default function UserTypeSelector() {
                   p-5
                   cursor-pointer
                   border-2
-                  border-gray-200
+                  border-green-200
                   border-l-4
-                  border-l-[#0F471A]
+                  border-l-green-600
                   bg-white
-                  hover:border-[#A8C3A0]
-                  hover:bg-[#F7F5EF]
+                  hover:border-green-400
+                  hover:bg-green-50
                   hover:shadow-xl
                   hover:-translate-y-0.5
                   transition-all
@@ -94,10 +89,7 @@ export default function UserTypeSelector() {
                 onClick={() => navigate(type.path)}
               >
                 <div className="flex h-full items-center gap-4">
-                  <div
-                    className="rounded-2xl p-3 shadow-md flex-shrink-0"
-                    style={{ backgroundColor: "#0F471A" }}
-                  >
+                  <div className="rounded-2xl bg-green-600 p-3 shadow-md flex-shrink-0">
                     <Icon className="w-7 h-7 text-white" />
                   </div>
 
@@ -118,48 +110,6 @@ export default function UserTypeSelector() {
           })}
         </div>
 
-        {/* Footer Info */}
-        <div className="text-center">
-          <p className="text-sm text-gray-500 mb-3">
-            İnterfeysə baxmaq üçün rolunuzu seçin
-          </p>
-
-          <div className="flex gap-2 justify-center">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="
-                text-gray-600
-                border
-                border-gray-200
-                rounded-xl
-                hover:bg-[#F7F5EF]
-                hover:border-[#A8C3A0]
-              "
-              onClick={() => navigate("/screens")}
-            >
-              <FileText className="w-4 h-4 mr-2" />
-              Ekran Xəritəsi
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              className="
-                text-gray-600
-                border
-                border-gray-200
-                rounded-xl
-                hover:bg-[#F7F5EF]
-                hover:border-[#A8C3A0]
-              "
-              onClick={() => navigate("/documentation")}
-            >
-              <FileText className="w-4 h-4 mr-2" />
-              UX Sənədləri
-            </Button>
-          </div>
-        </div>
       </div>
     </div>
   );

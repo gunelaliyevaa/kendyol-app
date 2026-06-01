@@ -177,7 +177,7 @@ export default function FarmerProducts() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
-      <MobileHeader title={t('farmer.products.title')} showBack profilePath="/farmer/profile" accentColor="amber" />
+      <MobileHeader title={t('farmer.products.title')} profilePath="/farmer/profile" accentColor="amber" />
 
       {/* Stats Header */}
       <div className="bg-white px-4 py-4 border-b-4 border-amber-100">

@@ -15,7 +15,6 @@ import {
   MapPin,
   Home,
   Calendar,
-  TrendingDown,
   ShoppingBag,
   AlertCircle,
   CheckCircle2
@@ -24,6 +23,7 @@ import { useLanguage } from "../../contexts/LanguageContext";
 import { CART_STORAGE_KEY, defaultCartItems, usePersistentState } from "../../data/demoStore";
 import { getProductName } from "../../data/productCatalog";
 import { marketplaceAssumptions } from "../../data/marketplaceAssumptions";
+import { customerProducts } from "../../data/customerProducts";
 
 const MIN_ORDER = marketplaceAssumptions.minimumOrder;
 const DELIVERY_FEE = marketplaceAssumptions.deliveryFee;
@@ -46,8 +46,6 @@ export default function Cart() {
   };
 
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const retailPrice = subtotal * 1.3;
-  const savings = retailPrice - subtotal;
   const deliveryFee = deliveryMethod === "home" && subtotal < FREE_DELIVERY_THRESHOLD ? DELIVERY_FEE : 0;
   const total = subtotal + deliveryFee;
 
@@ -159,17 +157,19 @@ export default function Cart() {
               </div>
 
               <div className="space-y-3">
-                {cartItems.map((item) => (
+                {cartItems.map((item) => {
+                  const product = customerProducts.find(productItem => productItem.productId === item.productId);
+                  return (
                   <Card
                     key={item.id}
                     className="p-4 border-2 border-gray-200 hover:border-green-300 hover:shadow-md transition-all"
                   >
                     <div className="flex gap-3">
-                      <div className="w-16 h-16 bg-gradient-to-br from-green-100 to-emerald-50 rounded-xl flex items-center justify-center flex-shrink-0 border-2 border-green-200">
-                        <span className="text-xs text-green-700 font-medium text-center px-1">
-                          {getProductName(item.productId, language).slice(0, 3)}
-                        </span>
-                      </div>
+                      <img
+                        src={product?.image}
+                        alt={getProductName(item.productId, language)}
+                        className="w-16 h-16 rounded-xl object-cover object-center flex-shrink-0 border-2 border-green-200 bg-green-50"
+                      />
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between mb-2">
@@ -222,7 +222,8 @@ export default function Cart() {
                       </div>
                     </div>
                   </Card>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
@@ -287,19 +288,6 @@ export default function Cart() {
               </RadioGroup>
             </div>
 
-            {/* Savings */}
-            <div className="px-4 pb-4">
-              <Card className="p-4 bg-amber-50 border-2 border-amber-300 border-l-4 border-l-amber-500">
-                <div className="flex items-center gap-3">
-                  <TrendingDown className="w-4 h-4 text-amber-600" />
-                  <div>
-                    <h3 className="text-amber-900 font-semibold text-sm">
-                      {t('cart.savings')}: ₼{savings.toFixed(2)}
-                    </h3>
-                  </div>
-                </div>
-              </Card>
-            </div>
           </div>
 
           {/* STICKY BOTTOM SUMMARY (FIXED PROPERLY) */}
@@ -320,11 +308,6 @@ export default function Cart() {
                       ? t('cart.free')
                       : `₼${deliveryFee.toFixed(2)}`}
                   </span>
-                </div>
-
-                <div className="flex justify-between text-sm text-green-600 font-medium">
-                  <span>{t('cart.yourSavings')}</span>
-                  <span>-₼{savings.toFixed(2)}</span>
                 </div>
 
                 <Separator className="bg-green-200" />

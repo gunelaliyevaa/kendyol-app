@@ -74,7 +74,7 @@ function CompactHero({
   return (
     <div className="bg-gradient-to-br from-green-600 to-emerald-700 text-white px-4 py-5 sm:px-6 sm:py-6">
       <div className="mb-4">
-        <h2 className="text-xl sm:text-2xl font-semibold leading-tight">
+        <h2 className="text-2xl sm:text-3xl font-semibold leading-tight">
           {t("customer.home.freshFromFarm")}
         </h2>
 

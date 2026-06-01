@@ -47,7 +47,7 @@ export default function DriverRoutes() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
-      <MobileHeader title={t('driver.availableRoutes')} showBack profilePath="/driver/profile" accentColor="blue" />
+      <MobileHeader title={t('driver.availableRoutes')} profilePath="/driver/profile" accentColor="blue" />
       <div className="p-4 space-y-4">
         <Card className="p-3 border-2 border-indigo-200 border-l-4 border-l-indigo-500 bg-indigo-50">
           <div className="flex items-start gap-3">

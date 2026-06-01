@@ -23,7 +23,7 @@ export function MobileHeader({
   cartCount = 0,
   onBackClick,
   onProfileClick,
-  profilePath = "/customer/subscriptions?tab=profile",
+  profilePath = "/customer/profile",
   titlePath,
   showProfile = true,
   accentColor = "green",
@@ -73,7 +73,7 @@ export function MobileHeader({
             <button
               type="button"
               onClick={() => navigate(titlePath)}
-              className="truncate rounded-lg font-bold text-lg text-[#0F471A] hover:text-green-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2"
+              className="truncate rounded-lg font-bold text-xl sm:text-2xl text-[#0F471A] hover:text-green-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2"
               aria-label={`${title}: rol seçiminə qayıt`}
             >
               {title}

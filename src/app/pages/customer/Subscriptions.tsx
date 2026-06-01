@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router";
 import { MobileHeader } from "../../components/MobileHeader";
 import { BottomNav } from "../../components/BottomNav";
 import { Card } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Switch } from "../../components/ui/switch";
+import { Checkbox } from "../../components/ui/checkbox";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../../components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import {
   Leaf,
@@ -19,31 +20,27 @@ import {
   Sparkles,
   AlertTriangle,
   X,
-  User,
-  MapPin,
-  Phone,
-  ShoppingBag,
   TrendingDown
 } from "lucide-react";
 import { useLanguage } from "../../contexts/LanguageContext";
-import { ProfileEditDialog } from "../../components/ProfileEditDialog";
 import { toast } from "sonner";
 import { useCartCount } from "../../data/demoStore";
 import { getProductName, type Language } from "../../data/productCatalog";
 import { localize, translateDemoText } from "../../data/logisticsData";
+import { customerProducts } from "../../data/customerProducts";
 
 export default function Subscriptions() {
   const { t, language } = useLanguage();
   const lang = language as Language;
   const cartCount = useCartCount();
-  const [searchParams] = useSearchParams();
 
-  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "active");
-  const [editProfileOpen, setEditProfileOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("active");
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [cancelledSubId, setCancelledSubId] = useState<number | null>(null);
   const [cancelSuccess, setCancelSuccess] = useState(false);
   const [cancelledSubName, setCancelledSubName] = useState("");
+  const [customizeSubId, setCustomizeSubId] = useState<number | null>(null);
+  const [customizedProductIds, setCustomizedProductIds] = useState<string[]>([]);
 
   const vegetableItems = () => [
     `${getProductName("tomato", lang)} (1 ${t("product.kg")})`,
@@ -134,6 +131,39 @@ export default function Subscriptions() {
     setCancelSuccess(false);
   };
 
+  const openCustomizeDialog = (sub: typeof activeSubscriptions[0]) => {
+    setCustomizeSubId(sub.id);
+    setCustomizedProductIds(
+      customerProducts
+        .filter(product => sub.items.some(item => item.startsWith(t(product.nameKey))))
+        .map(product => product.productId)
+    );
+  };
+
+  const toggleCustomizedProduct = (productId: string) => {
+    setCustomizedProductIds(current =>
+      current.includes(productId)
+        ? current.filter(currentProductId => currentProductId !== productId)
+        : [...current, productId]
+    );
+  };
+
+  const saveCustomizedItems = () => {
+    const items = customerProducts
+      .filter(product => customizedProductIds.includes(product.productId))
+      .map(product => `${t(product.nameKey)} (1 ${t(product.unitKey)})`);
+
+    setActiveSubscriptions(current =>
+      current.map(subscription =>
+        subscription.id === customizeSubId
+          ? { ...subscription, items }
+          : subscription
+      )
+    );
+    setCustomizeSubId(null);
+    toast.success(t("sub.customizeSaved"));
+  };
+
   const subscribeToBox = (box: {
     id: number;
     name: string;
@@ -182,7 +212,6 @@ export default function Subscriptions() {
     <div className="min-h-screen bg-gray-50 pb-32">
       <MobileHeader
         title={t("sub.title")}
-        showBack
         showCart
         cartCount={cartCount}
         accentColor="green"
@@ -327,13 +356,35 @@ export default function Subscriptions() {
         </div>
       )}
 
+      <Dialog open={customizeSubId !== null} onOpenChange={(open) => !open && setCustomizeSubId(null)}>
+        <DialogContent className="max-w-[360px] rounded-2xl p-4">
+          <DialogHeader>
+            <DialogTitle>{t("sub.customizeTitle")}</DialogTitle>
+            <DialogDescription>{t("sub.customizeDesc")}</DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[58vh] space-y-2 overflow-y-auto pr-1">
+            {customerProducts.map(product => (
+              <label key={product.id} className="flex cursor-pointer items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5">
+                <Checkbox
+                  checked={customizedProductIds.includes(product.productId)}
+                  onCheckedChange={() => toggleCustomizedProduct(product.productId)}
+                  className="data-[state=checked]:border-green-600 data-[state=checked]:bg-green-600"
+                />
+                <img src={product.image} alt={t(product.nameKey)} className="h-12 w-12 shrink-0 rounded-lg border border-gray-200 object-cover object-center" />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-semibold text-gray-800">{t(product.nameKey)}</span>
+                  <span className="block truncate text-xs text-gray-500">{product.farm} · ₼{product.price}/{t(product.unitKey)}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+          <p className="text-xs text-gray-500">{t("sub.customizeHint")}</p>
+          <Button onClick={saveCustomizedItems} disabled={customizedProductIds.length === 0} className="w-full h-10 rounded-xl bg-green-600 hover:bg-green-700">
+            {t("common.save")}
+          </Button>
+        </DialogContent>
+      </Dialog>
 
-      <ProfileEditDialog
-        open={editProfileOpen}
-        onOpenChange={setEditProfileOpen}
-        name="Nigar Əliyeva"
-        phone="+994 51 234 56 78"
-      />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="bg-white border-b-4 border-green-100 sticky top-[57px] z-40 shadow-sm px-4 pt-3 pb-0">
@@ -352,12 +403,6 @@ export default function Subscriptions() {
               {t("sub.available")}
             </TabsTrigger>
 
-            <TabsTrigger
-              value="profile"
-              className="flex-1 rounded-lg data-[state=active]:bg-green-600 data-[state=active]:text-white font-medium"
-            >
-              {t("customer.profile.title")}
-            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -439,7 +484,7 @@ export default function Subscriptions() {
                         variant="outline"
                         size="sm"
                         className="border-2 border-green-200 text-green-700 hover:bg-green-50 hover:border-green-400 transition-all text-xs h-8"
-                        onClick={() => toast.info(t("common.detailsOpened"))}
+                        onClick={() => openCustomizeDialog(subscription)}
                       >
                         <Edit className="w-3.5 h-3.5 mr-1.5" />
                         {t("cart.customize")}
@@ -750,161 +795,6 @@ export default function Subscriptions() {
           })}
         </TabsContent>
 
-        {/* Customer Profile */}
-        <TabsContent value="profile" className="p-4 space-y-4 mt-0">
-          <Card className="overflow-hidden border-2 border-green-200">
-            <div className="bg-gradient-to-br from-green-600 to-emerald-700 p-5">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-white/30 rounded-2xl flex items-center justify-center border-2 border-white/40 shadow-lg">
-                  <User className="w-8 h-8 text-white" />
-                </div>
-
-                <div>
-                  <h2 className="text-lg font-semibold text-white mb-0.5">
-                    Nigar Əliyeva
-                  </h2>
-                  <p className="text-green-100 text-sm">
-                    {t("customer.profile.memberSince")}: 2023
-                  </p>
-                  <Badge className="bg-white/20 text-white border-white/30 border text-xs mt-1">
-                    {t("customer.profile.premiumMember")}
-                  </Badge>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-4 bg-white">
-              <div className="grid grid-cols-3 gap-3">
-                <div className="text-center bg-green-50 rounded-xl p-3 border border-green-200">
-                  <div className="text-xl font-bold text-green-700">24</div>
-                  <div className="text-xs text-gray-500 font-medium">
-                    {t("customer.profile.totalOrders")}
-                  </div>
-                </div>
-
-                <div className="text-center bg-amber-50 rounded-xl p-3 border border-amber-200">
-                  <div className="text-xl font-bold text-amber-700">₼186</div>
-                  <div className="text-xs text-gray-500 font-medium">
-                    {t("customer.profile.totalSavings")}
-                  </div>
-                </div>
-
-                <div className="text-center bg-blue-50 rounded-xl p-3 border border-blue-200">
-                  <div className="text-xl font-bold text-blue-700">
-                    {activeSubscriptions.length}
-                  </div>
-                  <div className="text-xs text-gray-500 font-medium">
-                    {t("customer.profile.activeSubscriptions")}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <p className="px-4 pb-4 text-xs text-gray-600 bg-white">
-              {t("customer.profile.premiumDesc")}
-            </p>
-          </Card>
-
-          <Card className="p-5 border-2 border-gray-200">
-            <h3 className="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <div className="w-1 h-4 bg-green-500 rounded-full" />
-              {t("customer.profile.personalDetails")}
-            </h3>
-
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-gray-50 rounded-xl p-3 border border-gray-200">
-                  <div className="text-xs text-gray-500 font-medium mb-1">
-                    {t("customer.profile.name")}
-                  </div>
-                  <div className="font-semibold text-gray-900">Nigar</div>
-                </div>
-
-                <div className="bg-gray-50 rounded-xl p-3 border border-gray-200">
-                  <div className="text-xs text-gray-500 font-medium mb-1">
-                    {t("customer.profile.surname")}
-                  </div>
-                  <div className="font-semibold text-gray-900">Əliyeva</div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 bg-gray-50 rounded-xl p-3 border border-gray-200">
-                <Phone className="w-4 h-4 text-green-600 flex-shrink-0" />
-                <div>
-                  <div className="text-xs text-gray-500 font-medium">
-                    {t("customer.profile.phone")}
-                  </div>
-                  <div className="font-semibold text-gray-900">
-                    +994 51 234 56 78
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3 bg-gray-50 rounded-xl p-3 border border-gray-200">
-                <MapPin className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <div className="text-xs text-gray-500 font-medium">
-                    {t("customer.profile.address")}
-                  </div>
-                  <div className="font-semibold text-gray-900">
-                    Nəsimi Rayonu, 28 May küçəsi 15, Bakı
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-5 border-2 border-gray-200">
-            <h3 className="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <div className="w-1 h-4 bg-green-500 rounded-full" />
-              {t("customer.profile.recentOrders")}
-            </h3>
-
-            <div className="space-y-3">
-              {[
-                { date: "18 Mart 2026", amount: "₼43.50", items: 5 },
-                { date: "11 Mart 2026", amount: "₼38.00", items: 4 }
-              ].map((order, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center justify-between bg-gray-50 rounded-xl p-3 border border-gray-200"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="bg-green-100 rounded-lg p-2">
-                      <ShoppingBag className="w-4 h-4 text-green-600" />
-                    </div>
-
-                    <div>
-                      <div className="text-sm font-semibold text-gray-900">
-                        {translateDemoText(order.date, lang)}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {order.items} {t("tracking.items")}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="text-right">
-                    <div className="text-sm font-bold text-gray-900">
-                      {order.amount}
-                    </div>
-                    <Badge className="bg-green-100 text-green-700 border border-green-200 text-xs">
-                      {t("tracking.delivered")}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          <Button
-            className="w-full bg-green-600 hover:bg-green-700 h-12 font-semibold rounded-xl shadow-md transition-all hover:scale-[1.01]"
-            onClick={() => setEditProfileOpen(true)}
-          >
-            <Edit className="w-4 h-4 mr-2" />
-            {t("customer.profile.editProfile")}
-          </Button>
-        </TabsContent>
       </Tabs>
 
       <BottomNav type="customer" />

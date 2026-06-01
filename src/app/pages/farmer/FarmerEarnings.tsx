@@ -75,7 +75,7 @@ export default function FarmerEarnings() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
-      <MobileHeader title={t('farmer.earnings.title')} showBack profilePath="/farmer/profile" accentColor="amber" />
+      <MobileHeader title={t('farmer.earnings.title')} profilePath="/farmer/profile" accentColor="amber" />
 
       {/* Stats Overview */}
       <div className="bg-gradient-to-br from-green-600 to-emerald-700 text-white px-6 py-7">

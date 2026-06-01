@@ -6,6 +6,7 @@ import ProductDetail from "./pages/customer/ProductDetail";
 import Subscriptions from "./pages/customer/Subscriptions";
 import Cart from "./pages/customer/Cart";
 import OrderTracking from "./pages/customer/OrderTracking";
+import CustomerProfile from "./pages/customer/CustomerProfile";
 import FarmerDashboard from "./pages/farmer/FarmerDashboard";
 import FarmerProducts from "./pages/farmer/FarmerProducts";
 import FarmerEditProduct from "./pages/farmer/FarmerEditProduct";
@@ -44,6 +45,7 @@ export const router = createBrowserRouter([
       { path: "customer/subscriptions", Component: Subscriptions },
       { path: "customer/cart", Component: Cart },
       { path: "customer/tracking", Component: OrderTracking },
+      { path: "customer/profile", Component: CustomerProfile },
       
       // Farmer routes
       { path: "farmer", Component: FarmerDashboard },

@@ -19,7 +19,7 @@ export default function FarmerDeliveries() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
-      <MobileHeader title={t('nav.deliveries')} showBack profilePath="/farmer/profile" accentColor="amber" />
+      <MobileHeader title={t('nav.deliveries')} profilePath="/farmer/profile" accentColor="amber" />
       <div className="p-4 space-y-4">
         {deliveries.map((delivery) => (
           <Card key={delivery.id} className="p-4 border-2 border-green-200 border-l-4 border-l-green-500 bg-white">

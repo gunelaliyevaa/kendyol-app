@@ -94,7 +94,7 @@ export default function OrderTracking() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
-      <MobileHeader title={t('tracking.title')} showBack showCart cartCount={cartCount} accentColor="green" />
+      <MobileHeader title={t('tracking.title')} showCart cartCount={cartCount} accentColor="green" />
 
       {/* Current Order Status */}
       <div className="p-4 space-y-4">
@@ -119,7 +119,7 @@ export default function OrderTracking() {
               <div className="w-1.5 h-5 bg-green-500 rounded-full" />
               <div className="text-sm font-semibold text-gray-700">{t('tracking.progress')}</div>
             </div>
-            <Progress value={getProgressValue()} className="mb-5 h-3 bg-green-100" />
+            <Progress value={getProgressValue()} className="mb-5 h-3 bg-green-100 [&>div]:bg-green-500" />
 
             {/* Timeline */}
             <div className="space-y-4">

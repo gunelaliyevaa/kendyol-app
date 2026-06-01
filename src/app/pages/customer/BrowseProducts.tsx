@@ -89,13 +89,13 @@ function ProductCard({
   return (
     <Card
       onClick={onOpen}
-      className={`group overflow-hidden cursor-pointer bg-white border ${accent.border} rounded-xl shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 active:scale-[0.99]`}
+      className={`group gap-0 overflow-hidden cursor-pointer bg-white border ${accent.border} rounded-xl shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 active:scale-[0.99]`}
     >
-      <div className="relative h-24 sm:h-28 overflow-hidden bg-gray-100">
+      <div className="relative h-28 sm:h-32 overflow-hidden bg-gray-100">
         <img
           src={product.image}
           alt={product.name}
-          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
         />
 
         <div
@@ -116,12 +116,12 @@ function ProductCard({
         )}
       </div>
 
-      <div className="px-2.5 pt-0.5 pb-2.5">
+      <div className="px-2.5 pt-1 pb-2">
         <h4 className="text-[13px] sm:text-sm font-semibold text-gray-900 leading-tight truncate">
           {product.name}
         </h4>
 
-        <div className="mt-1 flex items-center gap-1 text-[11px] text-gray-500 min-w-0">
+        <div className="mt-0.5 flex items-center gap-1 text-[11px] text-gray-500 min-w-0">
           <User className="w-3 h-3 text-gray-400 shrink-0" />
           <span className="truncate">{product.farmerName}</span>
 
@@ -135,7 +135,7 @@ function ProductCard({
           <span className="truncate">{product.location}</span>
         </div>
 
-        <div className="mt-2 flex items-center justify-between gap-2">
+        <div className="mt-1.5 flex items-center justify-between gap-2">
           <div className="flex items-baseline gap-1 min-w-0">
             <span className="text-base font-bold text-gray-900">
               ₼{formatPrice(product.price)}
@@ -337,7 +337,10 @@ export default function BrowseProducts() {
       image:
         "https://img.freepik.com/premium-photo/many-green-ripe-cucumbers-box_457211-14126.jpg"
     }
-  ];
+  ].map(product => ({
+    ...product,
+    image: customerProducts.find(item => item.id === product.id)?.image ?? product.image,
+  }));
 
   const filteredProducts = products
     .filter(product => selectedCategory === "all" || product.category === selectedCategory)
@@ -374,7 +377,6 @@ export default function BrowseProducts() {
     <div className="min-h-screen bg-gray-50 pb-24">
       <MobileHeader
         title={t("browse.title")}
-        showBack
         showCart
         cartCount={totalCartItems}
         accentColor="green"

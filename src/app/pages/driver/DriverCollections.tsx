@@ -27,7 +27,7 @@ export default function DriverCollections() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
-      <MobileHeader title={t("driver.collectionOrders")} showBack profilePath="/driver/profile" accentColor="blue" />
+      <MobileHeader title={t("driver.collectionOrders")} profilePath="/driver/profile" accentColor="blue" />
 
       <div className="p-4 space-y-3">
         <Card className="p-3 border-2 border-indigo-200 border-l-4 border-l-indigo-500 bg-indigo-50">
