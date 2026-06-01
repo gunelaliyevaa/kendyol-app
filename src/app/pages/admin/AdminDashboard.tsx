@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { toast } from "sonner";
 import { MobileHeader } from "../../components/MobileHeader";
 import { BottomNav } from "../../components/BottomNav";
 import { Card } from "../../components/ui/card";
@@ -49,6 +51,7 @@ export default function AdminDashboard() {
   const [driverIssues] = usePersistentState<DriverIssue[]>(DRIVER_ISSUES_STORAGE_KEY, []);
   const [taskStatuses, setTaskStatuses] = usePersistentState<Record<string, AdminTaskUpdate>>(ADMIN_TASK_STATUSES_STORAGE_KEY, {});
   const [collectionStatuses] = usePersistentState<Record<string, string>>(DRIVER_COLLECTION_STATUSES_STORAGE_KEY, {});
+  const [showManagedTasks, setShowManagedTasks] = useState(false);
   const collectionOrders = farmerCollectionOrders.map(order => ({ ...order, status: collectionStatuses[order.id] ?? order.status }));
   const readyCollectionOrders = collectionOrders.filter(order => order.status === "ready").length;
 
@@ -92,7 +95,10 @@ export default function AdminDashboard() {
   ];
   const updateTaskStatus = (taskId: string, status: string) => {
     setTaskStatuses(current => ({ ...current, [taskId]: { status, adminName: "Aysel Quliyeva" } }));
+    toast.success(t("admin.taskUpdated"));
   };
+  const activeUrgentTasks = urgentTasks.filter(task => (taskStatuses[task.id]?.status ?? "pending") === "pending");
+  const managedUrgentTasks = urgentTasks.filter(task => (taskStatuses[task.id]?.status ?? "pending") !== "pending");
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
       <MobileHeader title={t('customer.home.title')} titlePath="/" profilePath="/admin/profile" accentColor="blue" />
@@ -161,11 +167,16 @@ export default function AdminDashboard() {
         <div className="px-4 py-5 bg-white border-b-4 border-blue-100">
           <SectionHeader title={t('admin.urgentTasks')} />
           <div className="space-y-3">
-            {urgentTasks.map((task) => {
+            {activeUrgentTasks.length === 0 && (
+              <Card className="p-4 border-2 border-green-200 bg-green-50 text-center">
+                <p className="text-sm font-semibold text-green-800">{t("admin.noPendingTasks")}</p>
+              </Card>
+            )}
+            {activeUrgentTasks.map((task) => {
               const taskUpdate = taskStatuses[task.id] ?? { status: "pending", adminName: "" };
               return (
               <Card key={task.id} className={`p-4 border-2 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${
-                task.priority === 'high' 
+                task.priority === 'high'
                   ? 'border-red-300 border-l-4 border-l-red-500 bg-red-50' 
                   : 'border-amber-300 border-l-4 border-l-amber-500 bg-amber-50'
               }`}>
@@ -176,27 +187,31 @@ export default function AdminDashboard() {
                     }`} />
                   </div>
                   <div className="flex-1">
-                    <h4 className={`font-semibold mb-1 ${task.priority === 'high' ? 'text-red-900' : 'text-amber-900'}`}>
-                      {task.title}
-                    </h4>
+                    <div className="flex items-start justify-between gap-2">
+                      <h4 className={`font-semibold mb-1 ${task.priority === 'high' ? 'text-red-900' : 'text-amber-900'}`}>
+                        {task.title}
+                      </h4>
+                      <Badge className="shrink-0 border border-amber-300 bg-amber-100 text-[10px] text-amber-800">
+                        {t(`admin.taskStatus.${taskUpdate.status}`)}
+                      </Badge>
+                    </div>
                     <p className={`text-sm ${
                       task.priority === 'high' ? 'text-red-700' : 'text-amber-700'
                     }`}>
                       {task.description}
                     </p>
                     <p className="text-xs text-gray-500 mt-1 font-medium">{translateDemoText(task.time, lang)}</p>
-                    <div className="grid grid-cols-3 gap-1 mt-3">
-                      {["pending", "resolved", "cancelled"].map(status => (
-                        <button
-                          key={status}
-                          type="button"
-                          onClick={() => updateTaskStatus(task.id, status)}
-                          className={`rounded-lg border px-1.5 py-2 text-[11px] font-semibold ${taskUpdate.status === status ? "bg-blue-600 border-blue-600 text-white" : "bg-white/70 border-gray-200 text-gray-600"}`}
-                        >
-                          {t(`admin.taskStatus.${status}`)}
-                        </button>
-                      ))}
+                    <div className="mt-3 flex items-center gap-2">
+                      <span className="text-xs font-semibold text-gray-600">{t("admin.orders.status")}</span>
+                      <select value={taskUpdate.status} onChange={(event) => updateTaskStatus(task.id, event.target.value)} className="h-9 flex-1 rounded-xl border border-gray-200 bg-white px-3 text-xs font-semibold shadow-sm outline-none">
+                        {["pending", "resolved", "cancelled"].map(status => (
+                          <option key={status} value={status}>{t(`admin.taskStatus.${status}`)}</option>
+                        ))}
+                      </select>
                     </div>
+                    <Button onClick={() => updateTaskStatus(task.id, "resolved")} className="mt-2 h-9 w-full rounded-xl bg-green-600 text-xs font-semibold hover:bg-green-700">
+                      {t("admin.resolveTask")}
+                    </Button>
                     {taskUpdate.adminName && (
                       <p className="text-xs text-gray-500 mt-2">
                         {t("admin.statusChangedBy")}: <span className="font-semibold text-gray-700">{taskUpdate.adminName}</span>
@@ -206,6 +221,36 @@ export default function AdminDashboard() {
                 </div>
               </Card>
             )})}
+            {managedUrgentTasks.length > 0 && (
+              <div className="pt-1">
+                <Button variant="outline" onClick={() => setShowManagedTasks(current => !current)} className="h-9 w-full rounded-xl border-gray-200 text-xs font-semibold text-gray-600">
+                  {showManagedTasks ? t("admin.hideManagedTasks") : `${t("admin.showManagedTasks")} (${managedUrgentTasks.length})`}
+                </Button>
+                {showManagedTasks && (
+                  <div className="mt-2 space-y-2">
+                    {managedUrgentTasks.map(task => {
+                      const taskUpdate = taskStatuses[task.id];
+                      const resolved = taskUpdate.status === "resolved";
+                      return (
+                        <Card key={task.id} className={`p-3 border ${resolved ? "border-green-200 bg-green-50" : "border-gray-200 bg-gray-50"}`}>
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="min-w-0">
+                              <p className="truncate text-xs font-semibold text-gray-800">{task.title}</p>
+                              <p className="text-[11px] text-gray-500">{t("admin.statusChangedBy")}: {taskUpdate.adminName}</p>
+                            </div>
+                            <select value={taskUpdate.status} onChange={(event) => updateTaskStatus(task.id, event.target.value)} className="h-8 rounded-lg border border-gray-200 bg-white px-2 text-[11px] font-semibold outline-none">
+                              {["pending", "resolved", "cancelled"].map(status => (
+                                <option key={status} value={status}>{t(`admin.taskStatus.${status}`)}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -235,16 +280,6 @@ export default function AdminDashboard() {
               <div className="text-lg font-bold text-amber-700">{collectionOrders.length - readyCollectionOrders}</div>
               <div className="text-xs text-gray-500">{t("admin.awaitingFarmer")}</div>
             </div>
-          </div>
-          <div className="mt-3 space-y-1.5">
-            {collectionOrders.map(order => (
-              <div key={order.id} className="flex items-center justify-between gap-2 rounded-lg border border-indigo-100 bg-white px-2.5 py-2">
-                <span className="text-xs font-medium text-gray-800">{order.farmer}</span>
-                <span className={`text-xs font-semibold ${order.status === "ready" ? "text-green-700" : "text-amber-700"}`}>
-                  {t(order.status === "ready" ? "driver.ready" : "driver.awaitingFarmer")}
-                </span>
-              </div>
-            ))}
           </div>
         </Card>
       </div>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BrainCircuit, CheckCircle2, ClipboardList, Clock3, Gauge, Leaf, MapPin, Navigation, PackageCheck, RefreshCw, Route, Snowflake, Sparkles, TrafficCone } from "lucide-react";
+import { BrainCircuit, CheckCircle2, ClipboardList, Clock3, Gauge, Leaf, MapPin, Navigation, PackageCheck, RefreshCw, Route, ShieldCheck, Snowflake, Sparkles, TrafficCone } from "lucide-react";
 import { toast } from "sonner";
 import { MobileHeader } from "../../components/MobileHeader";
 import { BottomNav } from "../../components/BottomNav";
@@ -19,6 +19,8 @@ export default function AdminAIRoutePlanner() {
   const [approvedRoutes, setApprovedRoutes] = usePersistentState<string[]>(APPROVED_ROUTES_STORAGE_KEY, []);
   const [recalculating, setRecalculating] = useState(false);
   const selectedRoute = scheduledRoutes.find(route => route.id === selectedRouteId) ?? scheduledRoutes[0];
+  const recommendedRoute = scheduledRoutes[0];
+  const alternativeRoute = scheduledRoutes[1];
 
   const factors = [
     [Leaf, t("ai.route.freshness")],
@@ -28,9 +30,9 @@ export default function AdminAIRoutePlanner() {
     [PackageCheck, t("ai.route.nearbyOrders")],
   ];
 
-  const approve = () => {
-    setApprovedRoutes(prev => prev.includes(selectedRoute.id) ? prev : [...prev, selectedRoute.id]);
-    toast.success(`${selectedRoute.id}: ${t("ai.route.approved")}`);
+  const approveRoute = (routeId: string) => {
+    setApprovedRoutes(prev => prev.includes(routeId) ? prev : [...prev, routeId]);
+    toast.success(`${routeId}: ${t("ai.route.approved")}`);
   };
 
   const recalculate = () => {
@@ -78,6 +80,64 @@ export default function AdminAIRoutePlanner() {
             <RefreshCw className={`w-4 h-4 mr-2 ${recalculating ? "animate-spin" : ""}`} />
             {recalculating ? t("ai.route.recalculating") : t("ai.route.recalculate")}
           </Button>
+        </Card>
+
+        <Card className="overflow-hidden border-2 border-green-300 border-l-4 border-l-green-500 bg-white shadow-sm">
+          <div className="bg-gradient-to-r from-green-600 to-emerald-600 p-4 text-white">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-2.5">
+                <div className="rounded-xl bg-white/20 p-2">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-xs text-green-100">{t("ai.route.recommendedChoice")}</div>
+                  <h3 className="font-semibold">{recommendedRoute.id}</h3>
+                  <p className="text-xs text-green-100 mt-0.5">{localize(recommendedRoute.routeDesc, lang)}</p>
+                </div>
+              </div>
+              <Badge className="bg-white/20 text-white border border-white/30">{recommendedRoute.ai.score}/100</Badge>
+            </div>
+          </div>
+
+          <div className="p-4 space-y-3">
+            <div>
+              <h4 className="text-sm font-semibold text-gray-900 mb-2">{t("ai.route.whyRecommended")}</h4>
+              <div className="space-y-1.5">
+                {[
+                  t("ai.route.reason.capacity"),
+                  t("ai.route.reason.risk"),
+                  t("ai.route.reason.stops"),
+                ].map(reason => (
+                  <div key={reason} className="flex items-start gap-2 text-xs text-gray-700">
+                    <CheckCircle2 className="w-4 h-4 shrink-0 text-green-600" />
+                    <span>{reason}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div className="text-xs font-semibold text-gray-700 mb-2">{t("ai.route.compareAlternative")}</div>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  [t("ai.route.time"), localize(recommendedRoute.estimatedTime, lang), localize(alternativeRoute.estimatedTime, lang)],
+                  [t("ai.route.cost"), recommendedRoute.ai.cost, alternativeRoute.ai.cost],
+                  [t("ai.route.sensitiveOrders"), recommendedRoute.sensitiveOrders, alternativeRoute.sensitiveOrders],
+                ].map(([label, recommended, alternative]) => (
+                  <div key={label as string} className="rounded-xl border border-gray-100 bg-gray-50 p-2 text-center">
+                    <div className="text-[10px] leading-tight text-gray-500">{label as string}</div>
+                    <div className="mt-1 text-sm font-bold text-green-700">{recommended as string | number}</div>
+                    <div className="text-[10px] text-gray-400">{t("ai.route.alternative")}: {alternative as string | number}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <Button onClick={() => approveRoute(recommendedRoute.id)} className="w-full h-11 bg-green-600 hover:bg-green-700 rounded-xl font-semibold">
+              <CheckCircle2 className="w-4 h-4 mr-2" />
+              {approvedRoutes.includes(recommendedRoute.id) ? t("ai.route.approved") : t("ai.route.approveRecommended")}
+            </Button>
+          </div>
         </Card>
 
         <div>
@@ -227,7 +287,7 @@ export default function AdminAIRoutePlanner() {
               </div>
               <Progress value={selectedRoute.ai.score} className="h-2.5 [&>div]:bg-green-500" />
             </div>
-            <Button onClick={approve} className="w-full h-11 bg-blue-600 hover:bg-blue-700 rounded-xl font-semibold">
+            <Button onClick={() => approveRoute(selectedRoute.id)} className="w-full h-11 bg-blue-600 hover:bg-blue-700 rounded-xl font-semibold">
               <CheckCircle2 className="w-4 h-4 mr-2" />
               {approvedRoutes.includes(selectedRoute.id) ? t("ai.route.approved") : t("ai.route.approve")}
             </Button>

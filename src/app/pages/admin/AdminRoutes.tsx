@@ -123,7 +123,7 @@ export default function AdminRoutes() {
                       <span className="text-gray-600 font-medium">{t('admin.routes.progress')}</span>
                       <span className="font-bold text-gray-900">{route.progress}%</span>
                     </div>
-                    <Progress value={route.progress} className="h-3" />
+                    <Progress value={route.progress} className="h-3 bg-blue-100 [&>div]:bg-blue-500" />
                   </div>
 
                   {route.delay && (

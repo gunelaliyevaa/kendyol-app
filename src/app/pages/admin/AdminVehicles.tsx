@@ -10,7 +10,6 @@ import {
   Truck,
   MapPin,
   User,
-  Phone,
   Navigation,
   Package,
   Clock,
@@ -275,9 +274,6 @@ export default function AdminVehicles() {
                         )}
                       </div>
                     </div>
-                    <Button size="sm" variant="outline" onClick={() => { window.location.href = `tel:${vehicle.driverPhone}`; }} className="h-8 px-2 border-2 border-gray-200 rounded-xl">
-                      <Phone className="w-3.5 h-3.5 text-blue-600" />
-                    </Button>
                   </div>
                 ) : (
                   <div className="flex items-center gap-3 bg-amber-50 rounded-xl p-3 border border-amber-200 mb-3">
