@@ -7,7 +7,7 @@ export const marketplaceAssumptions = {
   deliveryFee: 4,
   freeDeliveryThreshold: 45,
   platformCommissionPercent: 10,
-  pilotVehicle: "Ford Transit Custom Cargo",
+  pilotVehicle: "Ford Transit Custom",
   pilotVehicleCapacity: 25,
   pilotRoute: {
     az: "Şamaxı → Bakı",

@@ -19,6 +19,7 @@ import AdminVehicles from "./pages/admin/AdminVehicles";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminStorage from "./pages/admin/AdminStorage";
 import AdminAIRoutePlanner from "./pages/admin/AdminAIRoutePlanner";
+import AdminProfile from "./pages/admin/AdminProfile";
 import DriverPanel from "./pages/driver/DriverPanel";
 import DriverRoutes from "./pages/driver/DriverRoutes";
 import DriverProfile from "./pages/driver/DriverProfile";
@@ -66,6 +67,7 @@ export const router = createBrowserRouter([
       { path: "admin/vehicles", Component: AdminVehicles },
       { path: "admin/storage", Component: AdminStorage },
       { path: "admin/ai-route-planner", Component: AdminAIRoutePlanner },
+      { path: "admin/profile", Component: AdminProfile },
     ],
   },
 ]);

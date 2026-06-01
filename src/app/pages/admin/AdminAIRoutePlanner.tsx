@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BrainCircuit, CheckCircle2, Clock3, Gauge, Leaf, MapPin, Navigation, PackageCheck, RefreshCw, Route, Sparkles, TrafficCone } from "lucide-react";
+import { BrainCircuit, CheckCircle2, ClipboardList, Clock3, Gauge, Leaf, MapPin, Navigation, PackageCheck, RefreshCw, Route, Snowflake, Sparkles, TrafficCone } from "lucide-react";
 import { toast } from "sonner";
 import { MobileHeader } from "../../components/MobileHeader";
 import { BottomNav } from "../../components/BottomNav";
@@ -43,7 +43,7 @@ export default function AdminAIRoutePlanner() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
-      <MobileHeader title={t("ai.route.title")} showBack showProfile={false} accentColor="blue" />
+      <MobileHeader title={t("ai.route.title")} showBack profilePath="/admin/profile" accentColor="blue" />
 
       <div className="p-4 space-y-4">
         <Card className="p-4 border-2 border-blue-200 border-l-4 border-l-blue-500 bg-blue-50">
@@ -133,6 +133,56 @@ export default function AdminAIRoutePlanner() {
             })}
           </div>
         </div>
+
+        <Card className="overflow-hidden border-2 border-blue-200 bg-white">
+          <div className="flex items-start justify-between gap-3 bg-blue-50 px-4 py-3 border-b border-blue-100">
+            <div className="flex items-start gap-2.5">
+              <div className="bg-blue-100 rounded-xl p-2">
+                <ClipboardList className="w-4 h-4 text-blue-700" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900">{t("ai.route.batchOrders")}</h3>
+                <p className="text-xs text-gray-600 mt-0.5">{t("ai.route.batchOrdersDesc")}</p>
+              </div>
+            </div>
+            <Badge className="bg-white text-blue-800 border border-blue-200">{selectedRoute.batchId}</Badge>
+          </div>
+
+          <div className="p-4 space-y-3">
+            <div className="text-xs text-gray-500 font-medium">{localize(selectedRoute.week, lang)}</div>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                [PackageCheck, selectedRoute.orders, t("ai.route.orderCount")],
+                [MapPin, selectedRoute.stops, t("ai.route.deliveryPoints")],
+                [Snowflake, selectedRoute.sensitiveOrders, t("ai.route.sensitiveOrders")],
+              ].map(([Icon, value, label]) => {
+                const StatIcon = Icon as typeof PackageCheck;
+                return (
+                  <div key={label as string} className="rounded-xl border border-gray-100 bg-gray-50 p-2.5 text-center">
+                    <StatIcon className="w-4 h-4 text-blue-600 mx-auto mb-1" />
+                    <div className="text-base font-bold text-gray-900">{value as number}</div>
+                    <div className="text-[11px] leading-tight text-gray-500">{label as string}</div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="space-y-2">
+              {selectedRoute.orderDetails.map((item) => (
+                <div key={localize(item.product, lang)} className="flex items-center justify-between gap-3 rounded-xl border border-gray-100 bg-white px-3 py-2.5">
+                  <div className="min-w-0">
+                    <div className="text-sm font-semibold text-gray-900">{localize(item.product, lang)}</div>
+                    <div className="text-xs text-gray-500">{item.quantity} · {localize(item.handling, lang)}</div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className="text-sm font-bold text-gray-900">{item.orders}</div>
+                    <div className="text-[11px] text-gray-500">{t("admin.orders")}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Card>
 
         <Card className="overflow-hidden border-2 border-indigo-200 border-l-4 border-l-indigo-500 bg-white">
           <div className="bg-gradient-to-r from-indigo-600 to-blue-700 p-4 text-white">

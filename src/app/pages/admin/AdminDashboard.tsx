@@ -1,4 +1,3 @@
-import { useNavigate } from "react-router";
 import { MobileHeader } from "../../components/MobileHeader";
 import { BottomNav } from "../../components/BottomNav";
 import { Card } from "../../components/ui/card";
@@ -8,20 +7,16 @@ import { Button } from "../../components/ui/button";
 import { 
   Package,
   Truck,
-  MapPin,
   Clock,
-  CheckCircle2,
   AlertCircle,
-  TrendingUp,
-  Navigation,
-  User,
-  Fuel
+  TrendingUp
 } from "lucide-react";
 import { useLanguage } from "../../contexts/LanguageContext";
-import { localize, routes as routesData, translateDemoText } from "../../data/logisticsData";
+import { localize, translateDemoText } from "../../data/logisticsData";
 import type { Language } from "../../data/productCatalog";
 import { marketplaceAssumptions } from "../../data/marketplaceAssumptions";
-import { DRIVER_ISSUES_STORAGE_KEY, usePersistentState, type DriverIssue } from "../../data/demoStore";
+import { ADMIN_TASK_STATUSES_STORAGE_KEY, DRIVER_COLLECTION_STATUSES_STORAGE_KEY, DRIVER_ISSUES_STORAGE_KEY, usePersistentState, type AdminTaskUpdate, type DriverIssue } from "../../data/demoStore";
+import { farmerCollectionHub, farmerCollectionOrders } from "../../data/logisticsData";
 
 function SectionDivider() {
   return (
@@ -49,15 +44,17 @@ function SectionHeader({ title, action, onAction }: { title: string; action?: st
 }
 
 export default function AdminDashboard() {
-  const navigate = useNavigate();
   const { t, language } = useLanguage();
   const lang = language as Language;
   const [driverIssues] = usePersistentState<DriverIssue[]>(DRIVER_ISSUES_STORAGE_KEY, []);
+  const [taskStatuses, setTaskStatuses] = usePersistentState<Record<string, AdminTaskUpdate>>(ADMIN_TASK_STATUSES_STORAGE_KEY, {});
+  const [collectionStatuses] = usePersistentState<Record<string, string>>(DRIVER_COLLECTION_STATUSES_STORAGE_KEY, {});
+  const collectionOrders = farmerCollectionOrders.map(order => ({ ...order, status: collectionStatuses[order.id] ?? order.status }));
+  const readyCollectionOrders = collectionOrders.filter(order => order.status === "ready").length;
 
   const stats = [
     { label: t('admin.activeOrders'), value: String(marketplaceAssumptions.startingDailyOrders), icon: Package, color: "text-green-600", bg: "bg-green-100" },
     { label: t('admin.routesToday'), value: "1", icon: Truck, color: "text-blue-600", bg: "bg-blue-100" },
-    { label: t('admin.collectionPoints'), value: "1", icon: MapPin, color: "text-purple-600", bg: "bg-purple-100" },
   ];
 
   const batchProgress = {
@@ -70,69 +67,54 @@ export default function AdminDashboard() {
     deliveryDate: "25 Mart 2026"
   };
 
-  const collectionPoints = [
-    {
-      name: t('admin.shamakhi'),
-      collected: marketplaceAssumptions.startingDailyOrders,
-      expected: marketplaceAssumptions.pilotVehicleCapacity,
-      status: "collecting",
-      farmers: marketplaceAssumptions.initialActiveFarmers
-    }
-  ];
-
-  const coldStorage = [
-    { category: t('storage.sensitive'), items: 45, capacity: 100, temperature: "2-4°C", status: t('storage.optimal') },
-    { category: t('storage.medium'), items: 67, capacity: 150, temperature: "8-10°C", status: t('storage.optimal') },
-    { category: t('storage.durable'), items: 30, capacity: 100, temperature: "12-15°C", status: t('storage.optimal') }
-  ];
-
-  const vehicles = [
-    { id: "KY-VH-001", plate: "10BH456", driver: "Elvin M.", route: "ID-M001", routeDesc: "Şamaxı → Bakı", status: "active", progress: 50, orders: "3/10", speed: "42 km/s", fuel: 72 },
-  ];
-
   const urgentTasks = [
     ...driverIssues.map(issue => ({
+      id: issue.id,
       title: `${t("admin.driverReport")}: ${issue.routeId}`,
       description: issue.message || t(issue.typeKey),
       priority: "high",
       time: issue.time,
     })),
     { 
+      id: "urgent-route",
       title: t('admin.urgentRoute'), 
       description: t('admin.urgentRouteDesc'), 
       priority: "high",
       time: "15 dəq əvvəl"
     },
     { 
+      id: "urgent-storage",
       title: t('admin.urgentStorage'), 
       description: t('admin.urgentStorageDesc'), 
       priority: "medium",
       time: "1 saat əvvəl"
     }
   ];
-  const routeDescription = (routeId: string, fallback: string) => {
-    const route = routesData.find(item => item.id === routeId);
-    return route ? localize(route.routeDesc, lang) : fallback;
+  const updateTaskStatus = (taskId: string, status: string) => {
+    setTaskStatuses(current => ({ ...current, [taskId]: { status, adminName: "Aysel Quliyeva" } }));
   };
-
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
-      <MobileHeader title={t('customer.home.title')} titlePath="/" showProfile={false} accentColor="blue" />
+      <MobileHeader title={t('customer.home.title')} titlePath="/" profilePath="/admin/profile" accentColor="blue" />
 
       {/* Stats */}
-      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white px-6 py-7">
-        <h2 className="text-2xl font-semibold mb-5">{t('admin.operations')}</h2>
+      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white px-4 py-4">
+        <h2 className="text-lg font-semibold mb-3">{t('admin.operations')}</h2>
         
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-2">
           {stats.map((stat) => {
             const Icon = stat.icon;
             return (
-              <Card key={stat.label} className="bg-white/20 backdrop-blur-sm border-white/30 border-2 p-3 text-white text-center hover:bg-white/30 transition-all cursor-default">
-                <div className={`${stat.bg} rounded-full p-2 w-10 h-10 mx-auto mb-2 flex items-center justify-center`}>
-                  <Icon className={`w-5 h-5 ${stat.color}`} />
+              <Card key={stat.label} className="bg-white/20 backdrop-blur-sm border-white/30 border p-2.5 text-white hover:bg-white/30 transition-all cursor-default">
+                <div className="flex items-center gap-2">
+                  <div className={`${stat.bg} rounded-full w-8 h-8 flex items-center justify-center shrink-0`}>
+                    <Icon className={`w-4 h-4 ${stat.color}`} />
+                  </div>
+                  <div>
+                    <div className="text-xl font-bold leading-none">{stat.value}</div>
+                    <div className="text-xs text-blue-100 leading-tight font-medium mt-1">{stat.label}</div>
+                  </div>
                 </div>
-                <div className="text-2xl font-bold mb-1">{stat.value}</div>
-                <div className="text-xs text-blue-100 leading-tight font-medium">{stat.label}</div>
               </Card>
             );
           })}
@@ -162,7 +144,7 @@ export default function AdminDashboard() {
               <span className="text-gray-600 font-medium">{t('admin.ordersProcessed')}</span>
               <span className="font-bold text-gray-900">{batchProgress.collected}/{batchProgress.total}</span>
             </div>
-            <Progress value={(batchProgress.collected / batchProgress.total) * 100} className="h-3 bg-green-100" />
+            <Progress value={(batchProgress.collected / batchProgress.total) * 100} className="h-3 bg-green-100 [&>div]:bg-green-500" />
           </div>
 
           <div className="flex items-center gap-2 text-sm text-gray-600 bg-green-100 rounded-lg px-3 py-2">
@@ -179,8 +161,10 @@ export default function AdminDashboard() {
         <div className="px-4 py-5 bg-white border-b-4 border-blue-100">
           <SectionHeader title={t('admin.urgentTasks')} />
           <div className="space-y-3">
-            {urgentTasks.map((task, idx) => (
-              <Card key={idx} className={`p-4 border-2 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${
+            {urgentTasks.map((task) => {
+              const taskUpdate = taskStatuses[task.id] ?? { status: "pending", adminName: "" };
+              return (
+              <Card key={task.id} className={`p-4 border-2 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${
                 task.priority === 'high' 
                   ? 'border-red-300 border-l-4 border-l-red-500 bg-red-50' 
                   : 'border-amber-300 border-l-4 border-l-amber-500 bg-amber-50'
@@ -201,103 +185,68 @@ export default function AdminDashboard() {
                       {task.description}
                     </p>
                     <p className="text-xs text-gray-500 mt-1 font-medium">{translateDemoText(task.time, lang)}</p>
+                    <div className="grid grid-cols-3 gap-1 mt-3">
+                      {["pending", "resolved", "cancelled"].map(status => (
+                        <button
+                          key={status}
+                          type="button"
+                          onClick={() => updateTaskStatus(task.id, status)}
+                          className={`rounded-lg border px-1.5 py-2 text-[11px] font-semibold ${taskUpdate.status === status ? "bg-blue-600 border-blue-600 text-white" : "bg-white/70 border-gray-200 text-gray-600"}`}
+                        >
+                          {t(`admin.taskStatus.${status}`)}
+                        </button>
+                      ))}
+                    </div>
+                    {taskUpdate.adminName && (
+                      <p className="text-xs text-gray-500 mt-2">
+                        {t("admin.statusChangedBy")}: <span className="font-semibold text-gray-700">{taskUpdate.adminName}</span>
+                      </p>
+                    )}
                   </div>
                 </div>
               </Card>
-            ))}
+            )})}
           </div>
         </div>
       )}
 
       <SectionDivider />
 
-      {/* Collection Points Status */}
+      {/* Driver Handoff Status */}
       <div className="px-4 py-5 bg-white border-b-4 border-blue-100">
         <SectionHeader title={t('admin.collectionStatus')} />
-        <div className="space-y-3">
-          {collectionPoints.map((point, idx) => (
-            <Card key={idx} className={`p-4 border-2 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 ${
-              point.status === 'complete' 
-                ? 'border-green-200 border-l-4 border-l-green-500 hover:bg-green-50' 
-                : 'border-blue-200 border-l-4 border-l-blue-500 hover:bg-blue-50'
-            }`}>
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex-1">
-                  <h4 className="font-semibold text-gray-900 mb-1">{point.name}</h4>
-                  <p className="text-sm text-gray-600">{point.farmers} {t('admin.farmers')}</p>
-                </div>
-                {point.status === 'complete' ? (
-                  <Badge className="bg-green-100 text-green-800 border border-green-300 font-semibold">
-                    <CheckCircle2 className="w-3 h-3 mr-1" />
-                    {t('admin.complete')}
-                  </Badge>
-                ) : (
-                  <Badge className="bg-blue-100 text-blue-800 border border-blue-300 font-semibold">
-                    <Clock className="w-3 h-3 mr-1" />
-                    {t('admin.collecting')}
-                  </Badge>
-                )}
+        <Card className="p-4 border-2 border-indigo-200 border-l-4 border-l-indigo-500 bg-indigo-50">
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <div>
+              <h4 className="font-semibold text-gray-900">{localize(farmerCollectionHub.name, lang)}</h4>
+              <p className="text-xs text-gray-600 mt-1">{localize(farmerCollectionHub.address, lang)}</p>
+              <p className="text-xs text-indigo-700 mt-0.5">{t("admin.driverPickupDesc")}</p>
+            </div>
+            <Badge className="bg-indigo-100 text-indigo-700 border border-indigo-200 shrink-0">
+              {readyCollectionOrders}/{collectionOrders.length}
+            </Badge>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="rounded-xl border border-green-200 bg-white p-3 text-center">
+              <div className="text-lg font-bold text-green-700">{readyCollectionOrders}</div>
+              <div className="text-xs text-gray-500">{t("admin.readyForDriver")}</div>
+            </div>
+            <div className="rounded-xl border border-amber-200 bg-white p-3 text-center">
+              <div className="text-lg font-bold text-amber-700">{collectionOrders.length - readyCollectionOrders}</div>
+              <div className="text-xs text-gray-500">{t("admin.awaitingFarmer")}</div>
+            </div>
+          </div>
+          <div className="mt-3 space-y-1.5">
+            {collectionOrders.map(order => (
+              <div key={order.id} className="flex items-center justify-between gap-2 rounded-lg border border-indigo-100 bg-white px-2.5 py-2">
+                <span className="text-xs font-medium text-gray-800">{order.farmer}</span>
+                <span className={`text-xs font-semibold ${order.status === "ready" ? "text-green-700" : "text-amber-700"}`}>
+                  {t(order.status === "ready" ? "driver.ready" : "driver.awaitingFarmer")}
+                </span>
               </div>
-
-              <div className="mb-2">
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-gray-600 font-medium">{t('admin.collectionProgress')}</span>
-                  <span className="font-bold text-gray-900">{point.collected}/{point.expected} {t('admin.orders')}</span>
-                </div>
-                <Progress value={(point.collected / point.expected) * 100} className="h-3" />
-              </div>
-            </Card>
-          ))}
-        </div>
-      </div>
-
-      <SectionDivider />
-
-      {/* Vehicles Section - replaces Cold Storage */}
-      <div className="px-4 py-5 bg-white border-b-4 border-blue-100">
-        <SectionHeader 
-          title={t('vehicles.title')} 
-          action={t('admin.viewDetails')}
-          onAction={() => navigate('/admin/vehicles')}
-        />
-
-        <div className="space-y-3">
-          {vehicles.map((v, idx) => (
-            <Card key={idx} className={`p-4 border-2 border-l-4 hover:shadow-md hover:-translate-y-0.5 transition-all ${
-              v.status === 'active' ? 'border-green-200 border-l-green-500' :
-              v.status === 'delayed' ? 'border-red-200 border-l-red-500' :
-              'border-gray-200 border-l-gray-400'
-            }`}>
-              <div className="flex items-start justify-between mb-2">
-                <div>
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <Truck className="w-3.5 h-3.5 text-gray-500" />
-                    <span className="font-bold text-gray-900 text-sm">{v.plate}</span>
-                    <span className="text-xs text-blue-600 font-semibold">{v.route}</span>
-                    {v.delay && <AlertCircle className="w-3.5 h-3.5 text-red-500" />}
-                  </div>
-                  <p className="text-xs text-gray-500">{routeDescription(v.route, v.routeDesc)}</p>
-                  <div className="flex items-center gap-1 mt-0.5">
-                    <User className="w-3 h-3 text-gray-400" />
-                    <span className="text-xs text-gray-500">{v.driver}</span>
-                  </div>
-                </div>
-                <Badge className={`text-xs font-semibold ${
-                  v.status === 'active' ? 'bg-green-100 text-green-800 border border-green-300' :
-                  v.status === 'delayed' ? 'bg-red-100 text-red-800 border border-red-300' :
-                  'bg-gray-100 text-gray-700 border border-gray-200'
-                }`}>
-                  {v.status === 'active' ? t('vehicles.active') : v.status === 'delayed' ? t('vehicles.delayed') : t('admin.completed')}
-                </Badge>
-              </div>
-              <div className="flex justify-between text-xs mb-1">
-                <span className="text-gray-500">{v.orders} {t('vehicles.orders')} · {v.speed}</span>
-                <span className="font-bold text-gray-800">{v.progress}%</span>
-              </div>
-              <Progress value={v.progress} className={`h-1.5 ${v.status === 'delayed' ? '[&>div]:bg-red-500' : '[&>div]:bg-green-500'}`} />
-            </Card>
-          ))}
-        </div>
+            ))}
+          </div>
+        </Card>
       </div>
 
       <SectionDivider />

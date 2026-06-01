@@ -43,7 +43,7 @@ export const routes = [
     },
     driver: "Fərid Axundov",
     driverShort: "Fərid A.",
-    vehicle: "Yük maşını #8",
+    vehicle: "Mercedes-Benz Sprinter 316 CDI",
     plate: "77AZ112",
     status: "delayed",
     progress: 40,
@@ -61,7 +61,7 @@ export const routes = [
     routeDesc: { az: "Səbail → Nizami", en: "Sabail → Nizami", ru: "Сабаил → Низами" },
     driver: "Rəmil Süleymanov",
     driverShort: "Rəmil S.",
-    vehicle: "Mikroavtobus #7",
+    vehicle: "Volkswagen Crafter 35",
     plate: "33BX899",
     status: "completed",
     progress: 100,
@@ -76,6 +76,8 @@ export const routes = [
 export const scheduledRoutes = [
   {
     id: "ID-M004",
+    batchId: "ID-B2604",
+    week: { az: "25-31 Mart", en: "25-31 March", ru: "25-31 марта" },
     routeDesc: { az: "Şamaxı → Bakı (Pilot)", en: "Shamakhi → Baku (Pilot)", ru: "Шемаха → Баку (Пилот)" },
     date: { az: "Sabah", en: "Tomorrow", ru: "Завтра" },
     driver: { az: "Təyin edilməyib", en: "Unassigned", ru: "Не назначен" },
@@ -90,10 +92,18 @@ export const scheduledRoutes = [
       { location: { az: "Xətai Mərkəzi", en: "Khatai Hub", ru: "Центр Хатаи" }, orders: 6, time: "15:00", address: "Xocalı prospekti 24" },
     ],
     area: { az: "Bakı", en: "Baku", ru: "Баку" },
+    sensitiveOrders: 9,
+    orderDetails: [
+      { product: { az: "Göyərti və ispanaq", en: "Leafy greens and spinach", ru: "Зелень и шпинат" }, orders: 9, quantity: "74 dəstə", handling: { az: "Sərin daşınma", en: "Cool transport", ru: "Прохладная перевозка" }, sensitive: true },
+      { product: { az: "Pomidor və xiyar", en: "Tomatoes and cucumbers", ru: "Помидоры и огурцы" }, orders: 10, quantity: "118 kq", handling: { az: "Standart", en: "Standard", ru: "Стандарт" }, sensitive: false },
+      { product: { az: "Yumurta", en: "Eggs", ru: "Яйца" }, orders: 6, quantity: "24 qutu", handling: { az: "Ehtiyatlı daşınma", en: "Careful transport", ru: "Бережная перевозка" }, sensitive: true },
+    ],
     ai: { score: 94, cost: "₼126", time: { az: "4s 30d", en: "4h 30m", ru: "4ч 30м" }, finding: { az: "Şamaxı sifarişlərini bir həftəlik partiyada toplamaq Ford Transit tutumundan tam istifadə edir və şəhərdaxili dayanacaqları birləşdirir.", en: "Grouping Shamakhi orders into one weekly batch uses the Ford Transit capacity fully and combines city stops.", ru: "Объединение заказов из Шемахи в одну недельную партию полностью использует вместимость Ford Transit и объединяет городские остановки." } },
   },
   {
     id: "ID-M005",
+    batchId: "ID-B2604",
+    week: { az: "25-31 Mart", en: "25-31 March", ru: "25-31 марта" },
     routeDesc: { az: "Lənkəran → Salyan → Bakı (Cənub)", en: "Lankaran → Salyan → Baku (South)", ru: "Ленкорань → Сальян → Баку (Юг)" },
     date: { az: "Sabah", en: "Tomorrow", ru: "Завтра" },
     driver: { az: "Təyin edilməyib", en: "Unassigned", ru: "Не назначен" },
@@ -108,6 +118,12 @@ export const scheduledRoutes = [
       { location: { az: "Yasamal Mərkəzi", en: "Yasamal Hub", ru: "Центр Ясамала" }, orders: 16, time: "13:40", address: "Əliağa Vahid küç. 8" },
     ],
     area: { az: "Cənub Bakı", en: "South Baku", ru: "Южный Баку" },
+    sensitiveOrders: 27,
+    orderDetails: [
+      { product: { az: "Süd məhsulları", en: "Dairy products", ru: "Молочные продукты" }, orders: 18, quantity: "96 kq", handling: { az: "Soyuducu tələb olunur", en: "Refrigeration required", ru: "Требуется охлаждение" }, sensitive: true },
+      { product: { az: "Meyvə və giləmeyvə", en: "Fruit and berries", ru: "Фрукты и ягоды" }, orders: 9, quantity: "84 kq", handling: { az: "Sərin daşınma", en: "Cool transport", ru: "Прохладная перевозка" }, sensitive: true },
+      { product: { az: "Tərəvəzlər", en: "Vegetables", ru: "Овощи" }, orders: 38, quantity: "310 kq", handling: { az: "Standart", en: "Standard", ru: "Стандарт" }, sensitive: false },
+    ],
     ai: { score: 88, cost: "₼104", time: { az: "4s 10d", en: "4h 10m", ru: "4ч 10м" }, finding: { az: "Daha ucuz variantdır, amma soyuducu məhsullar üçün 45 dəqiqə əlavə risk yaradır.", en: "Cheaper option, but adds 45 minutes of risk for chilled products.", ru: "Более дешёвый вариант, но добавляет 45 минут риска для охлаждённых товаров." } },
   },
 ];

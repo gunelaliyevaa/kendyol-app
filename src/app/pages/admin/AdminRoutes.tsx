@@ -74,7 +74,7 @@ export default function AdminRoutes() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
-      <MobileHeader title={t('admin.routes.title')} showBack showProfile={false} accentColor="blue" />
+      <MobileHeader title={t('admin.routes.title')} showBack profilePath="/admin/profile" accentColor="blue" />
 
       <Tabs defaultValue="active" className="w-full">
         <div className="bg-white border-b-4 border-blue-100 sticky top-[57px] z-40 shadow-sm px-4 pt-3 pb-0">

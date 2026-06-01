@@ -32,6 +32,11 @@ export interface DriverIssue {
   time: string;
 }
 
+export interface AdminTaskUpdate {
+  status: string;
+  adminName: string;
+}
+
 export const CART_STORAGE_KEY = "kendyol-cart";
 export const CLAIMED_ROUTE_STORAGE_KEY = "kendyol-claimed-route";
 export const FARMER_PRODUCTS_STORAGE_KEY = "kendyol-farmer-products";
@@ -41,6 +46,7 @@ export const DRIVER_ISSUES_STORAGE_KEY = "kendyol-driver-issues";
 export const DRIVER_ISSUES_UPDATED_EVENT = "kendyol-driver-issues-updated";
 export const DRIVER_COLLECTION_STATUSES_STORAGE_KEY = "kendyol-driver-collection-statuses";
 export const DRIVER_ROUTE_STATUSES_STORAGE_KEY = "kendyol-driver-route-statuses";
+export const ADMIN_TASK_STATUSES_STORAGE_KEY = "kendyol-admin-task-statuses";
 
 export const defaultCartItems: CartItem[] = [
   { id: 1, productId: "tomato", price: 4.5, quantity: 2, unitKey: "product.kg", category: "medium" },

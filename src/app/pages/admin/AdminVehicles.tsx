@@ -62,7 +62,7 @@ export default function AdminVehicles() {
     {
       id: "KY-VH-002",
       plate: "77AZ112",
-      type: "Yük maşını",
+      type: "Mercedes-Benz Sprinter 316 CDI",
       capacity: "3500 kq",
       driver: "Fərid Axundov",
       driverPhone: "+994 55 765 43 21",
@@ -85,7 +85,7 @@ export default function AdminVehicles() {
     {
       id: "KY-VH-003",
       plate: "33BX899",
-      type: "Mikroavtobus",
+      type: "Volkswagen Crafter 35",
       capacity: "900 kq",
       driver: "Rəmil Süleymanov",
       driverPhone: "+994 70 111 22 33",
@@ -107,7 +107,7 @@ export default function AdminVehicles() {
     {
       id: "KY-VH-004",
       plate: "50KU234",
-      type: "Refrijerator",
+      type: "Mercedes-Benz Sprinter 315 CDI Soyuduculu",
       capacity: "800 kq",
       driver: null,
       driverPhone: null,
@@ -154,7 +154,7 @@ export default function AdminVehicles() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
-      <MobileHeader title={t('vehicles.title')} showProfile={false} accentColor="blue" />
+      <MobileHeader title={t('vehicles.title')} profilePath="/admin/profile" accentColor="blue" />
 
       {/* Fleet Overview */}
       <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white px-6 py-6">
@@ -323,7 +323,7 @@ export default function AdminVehicles() {
           <Button onClick={() => {
             if (!vehicles.some(vehicle => vehicle.id === "KY-VH-005")) {
               setVehicles(prev => [...prev, {
-                id: "KY-VH-005", plate: "90YZ505", type: "Mikroavtobus", capacity: "1000 kq", driver: null, driverPhone: null, driverRating: null,
+                id: "KY-VH-005", plate: "90YZ505", type: "Renault Master L2H2", capacity: "1000 kq", driver: null, driverPhone: null, driverRating: null,
                 status: "idle", location: "Anbar mərkəzi, Bakı", coords: { lat: 40.4021, lng: 49.8522 }, speed: "0 km/s", fuel: 100,
                 currentRoute: null, routeDesc: null, progress: 0, ordersTotal: 0, ordersCompleted: 0, lastUpdate: "indi", color: "border-l-gray-400", headerBg: "from-gray-50 to-slate-50",
               }]);

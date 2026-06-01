@@ -110,7 +110,7 @@ export default function AdminStorage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
-      <MobileHeader title={t('storage.title')} showBack showProfile={false} accentColor="blue" />
+      <MobileHeader title={t('storage.title')} showBack profilePath="/admin/profile" accentColor="blue" />
 
       {/* Overview Stats */}
       <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white px-6 py-7">
