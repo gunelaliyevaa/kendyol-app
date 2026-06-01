@@ -241,7 +241,7 @@ const translations = {
     'farmer.dashboard.productsDelivered': 'məhsul çatdırılıb',
     'farmer.dashboard.paid': 'Ödənilib',
     'farmer.dashboard.tip': 'Məsləhət',
-    'farmer.dashboard.tipText': 'Məhsullarınızın növbəti həftəlik çatdırılmaya daxil edilməsi üçün Bazar ertəsi günü son tarixdən əvvəl miqdarlarını yeniləyin.',
+    'farmer.dashboard.tipText': 'Növbəti həftəlik çatdırılmaya daxil olunması üçün məhsullarınızın miqdarlarını bazar ertəsindən əvvəl yeniləyin.',
 
     // Farmer Profile
     'farmer.profile.title': 'Profilim',
